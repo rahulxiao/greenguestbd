@@ -1,4 +1,4 @@
-import { Controller, Get, Put, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Put, Body } from '@nestjs/common';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 
 @Controller('users')
