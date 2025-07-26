@@ -1,43 +1,35 @@
 import { Injectable } from '@nestjs/common';
-
-export interface Admin {
-  id: number;
-  name: string;
-}
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Admin } from './admin.entity';
 
 @Injectable()
 export class AdminService {
-  private admins: Admin[] = [];
-  private idCounter = 1;
+  constructor(
+    @InjectRepository(Admin)
+    private readonly adminRepo: Repository<Admin>,
+  ) {}
 
-  create(admin: Omit<Admin, 'id'>): Admin {
-    const newAdmin = { id: this.idCounter++, ...admin };
-    this.admins.push(newAdmin);
-    return newAdmin;
+  async create(admin: Omit<Admin, 'id' | 'createdAt'>): Promise<Admin> {
+    const newAdmin = this.adminRepo.create(admin);
+    return this.adminRepo.save(newAdmin);
   }
 
-  findAll(): Admin[] {
-    return this.admins;
+  async findAll(): Promise<Admin[]> {
+    return this.adminRepo.find();
   }
 
-  findOne(id: number): Admin | undefined {
-    return this.admins.find(a => a.id === id);
+  async findOne(id: number): Promise<Admin | null> {
+    return this.adminRepo.findOneBy({ id });
   }
 
-  update(id: number, updateData: Partial<Omit<Admin, 'id'>>): Admin | undefined {
-    const admin = this.findOne(id);
-    if (admin) {
-      Object.assign(admin, updateData);
-    }
-    return admin;
+  async update(id: number, updateData: Partial<Omit<Admin, 'id' | 'createdAt'>>): Promise<Admin | null> {
+    await this.adminRepo.update(id, updateData);
+    return this.findOne(id);
   }
 
-  remove(id: number): boolean {
-    const index = this.admins.findIndex(a => a.id === id);
-    if (index !== -1) {
-      this.admins.splice(index, 1);
-      return true;
-    }
-    return false;
+  async remove(id: number): Promise<boolean> {
+    const result = await this.adminRepo.delete(id);
+    return !!result.affected && result.affected > 0;
   }
 }
