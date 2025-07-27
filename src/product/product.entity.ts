@@ -12,7 +12,7 @@ export class Product {
   @Column()
   category: string;
 
-  @Column('decimal')
+  @Column('decimal', { precision: 10, scale: 2 })
   price: number;
 
   @Column({ nullable: true })
@@ -26,6 +26,30 @@ export class Product {
 
   @Column({ default: true })
   available: boolean;
+
+  @Column({ nullable: true })
+  brand?: string;
+
+  @Column({ nullable: true })
+  sku?: string;
+
+  @Column('decimal', { precision: 10, scale: 2, nullable: true })
+  weight?: number;
+
+  @Column({ nullable: true })
+  dimensions?: string;
+
+  @Column({ type: 'text', nullable: true })
+  specifications?: string;
+
+  @Column({ default: 0 })
+  rating: number;
+
+  @Column({ default: 0 })
+  reviewCount: number;
+
+  @Column({ nullable: true })
+  tags?: string;
 
   @OneToMany(() => OrderItem, orderItem => orderItem.product)
   orderItems: OrderItem[];

@@ -6,10 +6,28 @@ export class Profile {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ nullable: true })
+  address: string;
+
+  @Column({ nullable: true })
+  city: string;
+
+  @Column({ nullable: true })
+  state: string;
+
+  @Column({ nullable: true })
+  country: string;
+
+  @Column({ nullable: true })
+  postalCode: string;
+
+  @Column({ type: 'text', nullable: true })
   bio: string;
 
-  @OneToOne(() => User)
+  @Column({ nullable: true })
+  avatar: string;
+
+  @OneToOne(() => User, user => user.profile)
   @JoinColumn()
   user: User;
 } 

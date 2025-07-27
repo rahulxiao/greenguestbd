@@ -1,0 +1,500 @@
+{
+  "info": {
+    "name": "GreenGuest Product API",
+    "description": "Complete product management API testing collection for GreenGuest application",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Product Management",
+      "item": [
+        {
+          "name": "Create Product",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Organic Green Tea\",\n  \"category\": \"Beverages\",\n  \"price\": 12.99,\n  \"description\": \"Premium organic green tea with natural antioxidants\",\n  \"imageUrl\": \"https://example.com/green-tea.jpg\",\n  \"stock\": 100,\n  \"available\": true,\n  \"brand\": \"GreenLeaf\",\n  \"sku\": \"GT001\",\n  \"weight\": 0.5,\n  \"dimensions\": \"10x5x3 cm\",\n  \"specifications\": \"Contains 50 tea bags, 100% organic, caffeine-free\",\n  \"tags\": \"organic, tea, healthy, antioxidant\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3333/products/createProduct",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3333",
+              "path": ["products", "createProduct"]
+            },
+            "description": "Create a new product with comprehensive details"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Second Product",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Eco-Friendly Water Bottle\",\n  \"category\": \"Accessories\",\n  \"price\": 24.99,\n  \"description\": \"Reusable stainless steel water bottle\",\n  \"imageUrl\": \"https://example.com/water-bottle.jpg\",\n  \"stock\": 50,\n  \"available\": true,\n  \"brand\": \"EcoLife\",\n  \"sku\": \"WB002\",\n  \"weight\": 0.8,\n  \"dimensions\": \"25x8 cm\",\n  \"specifications\": \"750ml capacity, BPA-free, keeps drinks cold for 24 hours\",\n  \"tags\": \"reusable, eco-friendly, stainless steel, water bottle\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3333/products/createProduct",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3333",
+              "path": ["products", "createProduct"]
+            },
+            "description": "Create a second product for testing"
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Products",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3333/products/getAllProducts",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3333",
+              "path": ["products", "getAllProducts"]
+            },
+            "description": "Retrieve all products from the database"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Product by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3333/products/getProductById/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3333",
+              "path": ["products", "getProductById", "1"]
+            },
+            "description": "Get specific product by ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Product Detail",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3333/products/getProductDetail/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3333",
+              "path": ["products", "getProductDetail", "1"]
+            },
+            "description": "Get detailed product information"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Product",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Premium Organic Green Tea\",\n  \"price\": 15.99,\n  \"description\": \"Updated description for premium organic green tea\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3333/products/updateProduct/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3333",
+              "path": ["products", "updateProduct", "1"]
+            },
+            "description": "Update product information"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Product Stock",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"stock\": 75\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3333/products/updateProductStock/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3333",
+              "path": ["products", "updateProductStock", "1"]
+            },
+            "description": "Update product stock quantity"
+          },
+          "response": []
+        },
+        {
+          "name": "Toggle Product Availability",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3333/products/toggleProductAvailability/2",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3333",
+              "path": ["products", "toggleProductAvailability", "2"]
+            },
+            "description": "Toggle product availability status"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Product",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3333/products/deleteProductById/2",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3333",
+              "path": ["products", "deleteProductById", "2"]
+            },
+            "description": "Delete product by ID (use ID 2 to keep the first product)"
+          },
+          "response": []
+        }
+      ],
+      "description": "Complete product management operations"
+    },
+    {
+      "name": "Product Queries",
+      "item": [
+        {
+          "name": "Get Products by Category",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3333/products/getProductsByCategory?category=Beverages",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3333",
+              "path": ["products", "getProductsByCategory"],
+              "query": [
+                {
+                  "key": "category",
+                  "value": "Beverages"
+                }
+              ]
+            },
+            "description": "Get products by category using query parameter"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Products by Name",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3333/products/getProductsByName?name=Green Tea",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3333",
+              "path": ["products", "getProductsByName"],
+              "query": [
+                {
+                  "key": "name",
+                  "value": "Green Tea"
+                }
+              ]
+            },
+            "description": "Get products by name using query parameter"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Available Products",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3333/products/getAvailableProducts",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3333",
+              "path": ["products", "getAvailableProducts"]
+            },
+            "description": "Get all available products"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Products by Brand",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3333/products/getProductsByBrand?brand=GreenLeaf",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3333",
+              "path": ["products", "getProductsByBrand"],
+              "query": [
+                {
+                  "key": "brand",
+                  "value": "GreenLeaf"
+                }
+              ]
+            },
+            "description": "Get products by brand using query parameter"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Products In Stock",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3333/products/getProductsInStock",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3333",
+              "path": ["products", "getProductsInStock"]
+            },
+            "description": "Get products that are out of stock"
+          },
+          "response": []
+        }
+      ],
+      "description": "Query-based product operations"
+    },
+    {
+      "name": "Validation Testing",
+      "item": [
+        {
+          "name": "Create Product - Invalid Price",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test Product\",\n  \"category\": \"Test\",\n  \"price\": -10\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3333/products/createProduct",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3333",
+              "path": ["products", "createProduct"]
+            },
+            "description": "Test price validation (negative price)"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Product - Invalid Image URL",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test Product\",\n  \"category\": \"Test\",\n  \"price\": 10.99,\n  \"imageUrl\": \"invalid-url\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3333/products/createProduct",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3333",
+              "path": ["products", "createProduct"]
+            },
+            "description": "Test image URL validation"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Product - Duplicate SKU",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Duplicate Product\",\n  \"category\": \"Test\",\n  \"price\": 10.99,\n  \"sku\": \"GT001\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3333/products/createProduct",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3333",
+              "path": ["products", "createProduct"]
+            },
+            "description": "Test duplicate SKU validation"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Product - Missing Required Fields",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test Product\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3333/products/createProduct",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3333",
+              "path": ["products", "createProduct"]
+            },
+            "description": "Test required fields validation"
+          },
+          "response": []
+        }
+      ],
+      "description": "Test various validation scenarios"
+    },
+    {
+      "name": "Error Testing",
+      "item": [
+        {
+          "name": "Get Non-existent Product",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3333/products/getProductById/999",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3333",
+              "path": ["products", "getProductById", "999"]
+            },
+            "description": "Test 404 error for non-existent product"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Non-existent Product",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test Update\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3333/products/updateProduct/999",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3333",
+              "path": ["products", "updateProduct", "999"]
+            },
+            "description": "Test 404 error when updating non-existent product"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Non-existent Product",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3333/products/deleteProductById/999",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3333",
+              "path": ["products", "deleteProductById", "999"]
+            },
+            "description": "Test 404 error when deleting non-existent product"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Stock with Negative Value",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"stock\": -5\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3333/products/updateProductStock/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3333",
+              "path": ["products", "updateProductStock", "1"]
+            },
+            "description": "Test negative stock validation"
+          },
+          "response": []
+        }
+      ],
+      "description": "Test error handling scenarios"
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3333",
+      "type": "string"
+    }
+  ]
+} 

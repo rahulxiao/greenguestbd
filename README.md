@@ -1,7 +1,7 @@
-# 🌱 Bonsai E-Commerce REST API (NestJS)
+# 🌱 GreenGuest E-Commerce REST API (NestJS)
 
-A complete RESTful API for managing a bonsai product store, built with [NestJS](https://nestjs.com/), TypeORM, and PostgreSQL.  
-Supports Admin & Customer roles, product management, cart, orders, wishlist, and more.
+A complete RESTful API for managing an eco-friendly product store, built with [NestJS](https://nestjs.com/), TypeORM, and PostgreSQL.  
+Supports Admin & Customer roles, comprehensive product management, user profiles, cart, orders, wishlist, and more.
 
 ---
 
@@ -10,10 +10,24 @@ Supports Admin & Customer roles, product management, cart, orders, wishlist, and
 ```
 src/
   admin/
-    admin.controller.ts
-    admin.entity.ts
-    admin.module.ts
-    admin.service.ts
+    admin.controller.ts      # Admin management with explicit routes
+    admin.entity.ts          # Admin entity with comprehensive fields
+    admin.module.ts          # Admin module configuration
+    admin.service.ts         # Admin business logic
+    admin.dto.ts             # Admin DTOs with validation
+  user/
+    user.controller.ts       # User management with explicit routes
+    user.entity.ts           # User entity with phone number
+    user.module.ts           # User module configuration
+    user.service.ts          # User business logic
+    user.dto.ts              # User DTOs with validation
+    profile.entity.ts        # User profile entity
+  product/
+    product.controller.ts    # Product management with explicit routes
+    product.entity.ts        # Product entity with comprehensive fields
+    product.module.ts        # Product module configuration
+    product.service.ts       # Product business logic
+    product.dto.ts           # Product DTOs with validation
   auth/
     auth.controller.ts
     auth.module.ts
@@ -38,23 +52,6 @@ src/
     dto/
       place-order.dto.ts
       update-order-status.dto.ts
-  product/
-    product.controller.ts
-    product.entity.ts
-    product.module.ts
-    product.service.ts
-    dto/
-      create-product.dto.ts
-      update-product.dto.ts
-      update-stock.dto.ts
-  user/
-    user.controller.ts
-    user.entity.ts
-    user.module.ts
-    user.service.ts
-    profile.entity.ts
-    dto/
-      update-profile.dto.ts
   wishlist/
     wishlist.controller.ts
     wishlist-item.entity.ts
@@ -68,8 +65,9 @@ main.ts
 
 ---
 
-## 📦 Extra Dependencies Installed
+## 📦 Dependencies
 
+### Core Dependencies
 - **@nestjs/typeorm** – TypeORM integration for NestJS
 - **typeorm** – ORM for TypeScript/JavaScript
 - **pg** – PostgreSQL driver for Node.js
@@ -77,6 +75,8 @@ main.ts
 - **class-transformer** – Used by class-validator for object transformation
 - **@nestjs/swagger** – Swagger/OpenAPI integration for NestJS
 - **swagger-ui-express** – Serves Swagger UI in Express apps
+- **bcrypt** – Password hashing
+- **@types/bcrypt** – TypeScript types for bcrypt
 
 Install all dependencies with:
 ```bash
@@ -87,37 +87,56 @@ npm install
 
 ## 🚀 Features
 
-### Admin
-- **Product Management:** Add, update, delete products; set availability and stock quantity
-- **Order Management:** View and manage customer orders
-- **Dashboard:** Monitor inventory and sales performance
+### Admin Management ✅ **ENHANCED**
+- **Comprehensive Admin Profile:** Name, email, password, phone number, role, position, bio, timezone
+- **Admin Authentication:** Secure login with password hashing
+- **Admin Status Management:** Toggle active/inactive status
+- **Login Tracking:** Last login timestamp and IP address
+- **Advanced Queries:** Find admins by email, name, active status
+- **Professional API:** Explicit routes with specific function names
 
-### Customer
-- **User Account:** Register, login, logout, profile management (update details, change password)
-- **Shopping Experience:** 
-  - Browse products by category (Indoor Bonsai, Outdoor Bonsai, Tools, Soil)
-  - Search and filter by price, category, and availability
-  - View detailed product pages (image, description, price, stock)
-  - Add/remove products to/from cart and update quantities
-  - Checkout and place orders
+### User Management ✅ **ENHANCED**
+- **User Registration:** Name, email, password, phone number
+- **Profile Management:** Separate profile entity with address, bio, avatar
+- **User Authentication:** Secure login system
+- **Profile Updates:** Flexible profile data management
+- **Advanced Queries:** Find users by email, name
+- **Professional API:** Explicit routes with specific function names
+
+### Product Management ✅ **ENHANCED**
+- **Comprehensive Product Data:** Name, category, price, description, image, stock, availability
+- **Advanced Product Fields:** Brand, SKU, weight, dimensions, specifications, rating, review count, tags
+- **Stock Management:** Update stock quantities and availability
+- **Product Queries:** Filter by category, name, brand, availability, stock status
+- **SKU Validation:** Unique product identification
+- **Professional API:** Explicit routes with specific function names
+
+### Shopping Experience
+- **Product Browsing:** Browse products by category with advanced filtering
+- **Shopping Cart:** Add, update, remove items with quantity management
+- **Order Management:** Place orders, view order history, track order status
+- **Wishlist:** Save products for later purchase
+- **User Profiles:** Manage personal information and preferences
 
 ---
 
 ## 🏆 Feature Levels
 
-### Basic ✅ **COMPLETED**
-- Product categories & filtering
-- Product details page
-- User authentication system
-- Shopping cart functionality
-- Order placement & summary
-- Admin dashboard for product & order management
+### Basic ✅ **COMPLETED & ENHANCED**
+- ✅ Product categories & advanced filtering
+- ✅ Comprehensive product details with specifications
+- ✅ Enhanced user authentication system with profiles
+- ✅ Advanced shopping cart functionality
+- ✅ Order placement & management
+- ✅ Professional admin dashboard with comprehensive features
 
-### Intermediate ✅ **COMPLETED**
-- Wishlist (save products for later)
-- Customer order history
-- Product reviews & ratings
-- Stock management for admin
+### Intermediate ✅ **COMPLETED & ENHANCED**
+- ✅ Enhanced wishlist functionality
+- ✅ Comprehensive customer order history
+- ✅ Product reviews & ratings system
+- ✅ Advanced stock management for admin
+- ✅ Professional API structure with explicit routes
+- ✅ Comprehensive data validation
 
 ### Advanced 🔄 **PENDING**
 - Discount coupons & promo codes
@@ -137,45 +156,80 @@ npm install
 
 ## 📦 API Endpoints
 
-### Auth
+### Admin Management
 ```http
-POST   /auth/register        # Register user
-POST   /auth/login           # Login user (JWT)
-GET    /users/profile        # Get profile
-PUT    /users/profile        # Update profile
+POST   /admin/createAdmin              # Create new admin
+GET    /admin/getAllAdmins             # Get all admins
+GET    /admin/getAdminById/:id         # Get admin by ID
+GET    /admin/getAdminProfile/:id      # Get admin profile
+PUT    /admin/updateAdmin/:id          # Update admin
+PUT    /admin/toggleAdminStatus/:id    # Toggle admin status
+POST   /admin/loginAdmin               # Admin login
+DELETE /admin/deleteAdminById/:id      # Delete admin
+GET    /admin/getAdminByEmail?email=   # Find admin by email
+GET    /admin/getAdminByName?name=     # Find admins by name
+GET    /admin/getActiveAdmins          # Get active admins
+GET    /admin/getInactiveAdmins        # Get inactive admins
 ```
 
-### Products
+### User Management
 ```http
-GET    /products             # Get all products (with filters)
-GET    /products/:id         # Get product details
-POST   /products             # Add new product (Admin only)
-PUT    /products/:id         # Update product (Admin only)
-DELETE /products/:id         # Delete product (Admin only)
-PATCH  /products/:id/stock   # Update stock & availability
+POST   /users/createUser               # Create new user
+GET    /users/getAllUsers              # Get all users
+GET    /users/getUserById/:id          # Get user by ID
+GET    /users/getUserProfile/:id       # Get user profile
+PUT    /users/updateUser/:id           # Update user
+PUT    /users/updateUserProfile/:id    # Update user profile
+POST   /users/loginUser                # User login
+DELETE /users/deleteUserById/:id       # Delete user
+GET    /users/getUserByEmail?email=    # Find user by email
+GET    /users/getUsersByName?name=     # Find users by name
+```
+
+### Product Management
+```http
+POST   /products/createProduct         # Create new product
+GET    /products/getAllProducts        # Get all products
+GET    /products/getProductById/:id    # Get product by ID
+GET    /products/getProductDetail/:id  # Get detailed product info
+PUT    /products/updateProduct/:id     # Update product
+PUT    /products/updateProductStock/:id # Update stock
+PUT    /products/toggleProductAvailability/:id # Toggle availability
+DELETE /products/deleteProductById/:id # Delete product
+GET    /products/getProductsByCategory?category= # Filter by category
+GET    /products/getProductsByName?name= # Filter by name
+GET    /products/getAvailableProducts  # Get available products
+GET    /products/getProductsByBrand?brand= # Filter by brand
+GET    /products/getProductsInStock    # Get products in stock
+```
+
+### Auth
+```http
+POST   /auth/register                  # Register user
+POST   /auth/login                     # Login user (JWT)
 ```
 
 ### Cart
 ```http
-POST   /cart                 # Add to cart
-GET    /cart                 # View cart
-PUT    /cart/:itemId         # Update quantity
-DELETE /cart/:itemId         # Remove from cart
+POST   /cart                           # Add to cart
+GET    /cart                           # View cart
+PUT    /cart/:itemId                   # Update quantity
+DELETE /cart/:itemId                   # Remove from cart
 ```
 
 ### Orders
 ```http
-POST   /orders               # Place order
-GET    /orders/my            # View my orders
-GET    /orders               # View all orders (Admin)
-PUT    /orders/:id/status    # Update order status (Admin)
+POST   /orders                         # Place order
+GET    /orders/my                      # View my orders
+GET    /orders                         # View all orders (Admin)
+PUT    /orders/:id/status              # Update order status (Admin)
 ```
 
 ### Wishlist
 ```http
-POST   /wishlist             # Add product to wishlist
-GET    /wishlist             # Get wishlist
-DELETE /wishlist/:id         # Remove from wishlist
+POST   /wishlist                       # Add product to wishlist
+GET    /wishlist                       # Get wishlist
+DELETE /wishlist/:id                   # Remove from wishlist
 ```
 
 ---
@@ -184,64 +238,64 @@ DELETE /wishlist/:id         # Remove from wishlist
 
 - **Backend:** NestJS, TypeScript
 - **Database:** PostgreSQL, TypeORM
-- **Authentication:** JWT
-- **Real-time:** WebSockets
+- **Authentication:** JWT, bcrypt for password hashing
+- **Validation:** class-validator, class-transformer
+- **API Documentation:** Swagger/OpenAPI
+- **Real-time:** WebSockets (planned)
 
 ---
 
 ## 🧩 API Validation & Documentation
 
-- **Validation:** All request DTOs use [`class-validator`](https://github.com/typestack/class-validator) decorators for strong validation (e.g. `@IsEmail()`, `@IsString()`, `@MinLength()`).
-- **Global ValidationPipe:** Validation is enforced globally using NestJS's `ValidationPipe` (see `main.ts`). Invalid requests will return clear error messages.
-- **API Documentation:** All DTOs and endpoints are documented using [`@nestjs/swagger`](https://docs.nestjs.com/openapi/introduction).
-- **Swagger UI:** Interactive API docs are available at [`/api`](http://localhost:3333/api) (default port). You can try out endpoints, see request/response schemas, and view validation rules.
+### ✅ **Enhanced Validation System**
+- **Comprehensive DTOs:** All modules now have detailed DTOs with extensive validation
+- **Field Validation:** Email, phone numbers, passwords, URLs, numeric ranges
+- **Business Logic Validation:** SKU uniqueness, email conflicts, stock validation
+- **Global ValidationPipe:** Validation enforced globally with clear error messages
+- **Data Transformation:** Automatic type conversion and sanitization
+
+### ✅ **Professional API Structure**
+- **Explicit Routes:** All endpoints use descriptive, specific route names
+- **Specific Function Names:** `createAdmin`, `getAdminById`, `updateProduct`, etc.
+- **Parameter Validation:** `ParseIntPipe` for ID parameters
+- **HTTP Status Codes:** Proper status codes for all operations
+- **Consistent Response Format:** Standardized response DTOs
+
+### ✅ **API Documentation**
+- **Swagger Integration:** Complete API documentation with `@nestjs/swagger`
+- **Interactive Testing:** Try endpoints directly in Swagger UI
+- **Request/Response Schemas:** Detailed schema documentation
+- **Validation Rules:** Visible validation constraints
 
 ---
 
 ## 🗄️ Database Modeling & TypeORM Features
 
-### ✅ **Entity Relationships Implemented**
+### ✅ **Enhanced Entity Relationships**
 - **One-to-Many:**
-  - `User` ↔ `Order` (a user can have many orders)
-  - `User` ↔ `CartItem` (a user can have many cart items)
-  - `User` ↔ `WishlistItem` (a user can have many wishlist items)
-  - `Product` ↔ `OrderItem` (a product can be in many order items)
-- **Many-to-Many (via join table):**
-  - `Order` ↔ `Product` (an order can have many products, a product can be in many orders) using the `OrderItem` join entity, which also stores quantity.
+  - `Admin` ↔ `Order` (admin can manage many orders)
+  - `User` ↔ `Order` (user can have many orders)
+  - `User` ↔ `CartItem` (user can have many cart items)
+  - `User` ↔ `WishlistItem` (user can have many wishlist items)
+  - `Product` ↔ `OrderItem` (product can be in many order items)
 - **One-to-One:**
-  - `User` ↔ `Profile` (each user can have one profile with additional info)
+  - `User` ↔ `Profile` (user has one profile with additional info)
+- **Many-to-Many (via join table):**
+  - `Order` ↔ `Product` (order can have many products, product can be in many orders)
 
-### ✅ **TypeORM Features Implemented**
-- **Entities:** All business objects are modeled as TypeORM entities with proper decorators.
-- **Decorators:** Uses `@Entity`, `@Column`, `@PrimaryGeneratedColumn`, `@CreateDateColumn`, `@UpdateDateColumn`, and all relation decorators.
-- **CRUD Operations:** All modules use TypeORM repositories for complete create, read, update, and delete operations.
-- **Find Options:** Services use `find`, `findOneBy`, `findOne` and can be extended with `relations`, `where`, `order`, `skip`, `take` for advanced queries.
-- **Relations:** Real-world e-commerce relations are properly modeled with bidirectional relationships.
+### ✅ **Enhanced Entity Features**
+- **Comprehensive Fields:** All entities now have extensive field sets
+- **Data Validation:** Database-level validation with constraints
+- **Timestamps:** Automatic `createdAt` and `updatedAt` tracking
+- **Soft Deletes:** Support for soft deletion (planned)
+- **Indexing:** Optimized database performance
 
-### ✅ **Full CRUD Operations Implemented**
-All services now provide complete CRUD functionality:
+### ✅ **Professional Service Layer**
+All services now provide enhanced functionality:
 
-- **AdminService:** `create`, `findAll`, `findOne`, `update`, `remove`
-- **UserService:** `create`, `findAll`, `findOne`, `update`, `remove`, `getProfile`, `updateProfile`
-- **ProductService:** `create`, `findAll`, `findOne`, `update`, `remove`
-- **CartService:** `create`, `findAll`, `findOne`, `update`, `remove`, `addToCart`, `viewCart`, `updateQuantity`, `removeFromCart`
-- **OrderService:** `create`, `findAll`, `findOne`, `update`, `remove`, `placeOrder`, `viewMyOrders`, `viewAllOrders`, `updateOrderStatus`
-- **WishlistService:** `create`, `findAll`, `findOne`, `update`, `remove`, `addToWishlist`, `getWishlist`, `removeFromWishlist`
-
-### Example: Many-to-Many (Order-Product)
-- The `OrderItem` entity links `Order` and `Product` with a `quantity` field.
-- You can query all products in an order, or all orders containing a product.
-- Supports complex order scenarios with multiple products and quantities.
-
-### Example: One-to-One (User-Profile)
-- The `Profile` entity links to `User` with a one-to-one relationship.
-- You can store extra profile info (e.g., bio) for each user.
-- Cascade operations are configured for automatic profile management.
-
-### Example: One-to-Many (User-Orders)
-- Users can have multiple orders over time.
-- Each order belongs to exactly one user.
-- Supports order history and user-specific order management.
+- **AdminService:** `createAdmin`, `getAllAdmins`, `getAdminById`, `findAdminByEmail`, `updateAdmin`, `toggleAdminStatus`, `deleteAdmin`, `getAdminsByName`, `getActiveAdmins`, `getInactiveAdmins`
+- **UserService:** `createUser`, `getAllUsers`, `getUserById`, `findUserByEmail`, `updateUser`, `updateUserProfile`, `getUserProfile`, `deleteUser`, `getUsersByName`
+- **ProductService:** `createProduct`, `getAllProducts`, `getProductById`, `getProductDetail`, `updateProduct`, `deleteProduct`, `getProductsByCategory`, `getProductsByName`, `getAvailableProducts`, `getProductsByBrand`, `getProductsInStock`, `updateProductStock`, `toggleProductAvailability`
 
 ---
 
@@ -254,7 +308,7 @@ All services now provide complete CRUD functionality:
 
 2. **Database Setup:**
    - Ensure PostgreSQL is running
-   - Create database named `greenguest`
+   - Create database named `trendora` (or update in `app.module.ts`)
    - Update connection details in `app.module.ts` if needed
 
 3. **Run the app:**
@@ -265,20 +319,42 @@ All services now provide complete CRUD functionality:
 4. **Open Swagger UI:**
    Visit [http://localhost:3333/api](http://localhost:3333/api) in your browser.
 
-5. **Database Tables:**
+5. **Test with Postman Collections:**
+   - Import `postman_admin_collection.json` for admin testing
+   - Import `postman_user_collection.json` for user testing
+   - Import `postman_product_collection.json` for product testing
+
+6. **Database Tables:**
    - Tables will be automatically created when the app starts
    - Check pgAdmin to see the generated tables: `admin`, `user`, `profile`, `product`, `cart_item`, `order`, `order_item`, `wishlist_item`
 
 ---
 
-## 📝 Notes
-- All endpoints expect and return JSON.
-- Use the Swagger UI to explore the API and see required/optional fields for each request.
-- Validation errors will be returned with helpful messages if your request is invalid.
-- Database schema is auto-synced in development (see `synchronize: true` in `app.module.ts`).
-- Entity relationships are modeled using TypeORM decorators for robust, real-world data modeling.
-- All services use async/await for database operations and proper error handling.
-- The backend is production-ready with full database integration and TypeORM features.
+## 📝 Key Improvements
+
+### ✅ **Professional API Design**
+- **Explicit Route Names:** All endpoints use descriptive, specific names
+- **Consistent Naming:** `createAdmin`, `getAdminById`, `updateProduct`, etc.
+- **Parameter Validation:** `ParseIntPipe` for ID parameters
+- **HTTP Status Codes:** Proper status codes for all operations
+
+### ✅ **Enhanced Data Validation**
+- **Comprehensive DTOs:** Extensive validation for all fields
+- **Business Logic:** SKU uniqueness, email conflicts, stock validation
+- **Field Validation:** Email, phone numbers, passwords, URLs, numeric ranges
+- **Error Handling:** Clear, descriptive error messages
+
+### ✅ **Improved Database Structure**
+- **Enhanced Entities:** Comprehensive field sets for all entities
+- **Better Relationships:** Properly modeled entity relationships
+- **Data Integrity:** Database-level constraints and validation
+- **Performance:** Optimized queries and indexing
+
+### ✅ **Professional Service Layer**
+- **Specific Functions:** Clear, descriptive function names
+- **Error Handling:** Proper exception handling with meaningful messages
+- **Data Mapping:** Clean response DTOs without sensitive data
+- **Business Logic:** Comprehensive business rules implementation
 
 ---
 
@@ -286,17 +362,23 @@ All services now provide complete CRUD functionality:
 
 Your backend now includes:
 - ✅ Complete TypeORM integration with PostgreSQL
-- ✅ All entity relationships (One-to-One, One-to-Many, Many-to-Many)
-- ✅ Full CRUD operations for all modules
-- ✅ Data validation with class-validator
-- ✅ API documentation with Swagger
-- ✅ Proper error handling and async operations
+- ✅ Enhanced entity relationships with comprehensive fields
+- ✅ Professional API design with explicit routes
+- ✅ Comprehensive data validation with class-validator
+- ✅ Advanced business logic and error handling
+- ✅ Complete API documentation with Swagger
+- ✅ Professional service layer with specific functions
 - ✅ Modular architecture with dependency injection
+- ✅ Password hashing with bcrypt
+- ✅ Comprehensive Postman collections for testing
 
 **Next steps could include:**
-- Authentication middleware and JWT implementation
-- Role-based access control
-- Advanced query optimization
+- JWT authentication middleware implementation
+- Role-based access control (RBAC)
+- Advanced query optimization and caching
 - Unit and integration testing
 - Payment gateway integration
 - Real-time features with WebSockets
+- Email notification system
+- File upload for images
+- Advanced analytics and reporting

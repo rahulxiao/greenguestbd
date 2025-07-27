@@ -1,0 +1,497 @@
+{
+  "info": {
+    "name": "GreenGuest Admin API",
+    "description": "Complete admin management API testing collection for GreenGuest application",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Admin Management",
+      "item": [
+        {
+          "name": "Create Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Admin\",\n  \"email\": \"admin@greenguest.com\",\n  \"password\": \"Admin123\",\n  \"phoneNumber\": \"+1 (555) 123-4567\",\n  \"role\": \"super_admin\",\n  \"position\": \"System Administrator\",\n  \"bio\": \"Experienced system administrator with 5+ years in hospitality management\",\n  \"timezone\": \"America/New_York\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3333/admin/createAdmin",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3333",
+              "path": ["admin", "createAdmin"]
+            },
+            "description": "Create a new admin user with all required fields"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Second Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Sarah Manager\",\n  \"email\": \"sarah@greenguest.com\",\n  \"password\": \"Manager456\",\n  \"phoneNumber\": \"+44 20 7946 0958\",\n  \"role\": \"manager\",\n  \"position\": \"Operations Manager\",\n  \"bio\": \"Operations manager specializing in customer service and team leadership\",\n  \"timezone\": \"Europe/London\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3333/admin/createAdmin",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3333",
+              "path": ["admin", "createAdmin"]
+            },
+            "description": "Create a second admin user for testing"
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Admins",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3333/admin/getAllAdmins",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3333",
+              "path": ["admin", "getAllAdmins"]
+            },
+            "description": "Retrieve all admin users from the database"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Admin by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3333/admin/getAdminById/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3333",
+              "path": ["admin", "getAdminById", "1"]
+            },
+            "description": "Get specific admin by ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Admin Profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3333/admin/getAdminProfile/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3333",
+              "path": ["admin", "getAdminProfile", "1"]
+            },
+            "description": "Get admin profile (public data without sensitive information)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Admin by Email",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3333/admin/getAdminByEmail?email=admin@greenguest.com",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3333",
+              "path": ["admin", "getAdminByEmail"],
+              "query": [
+                {
+                  "key": "email",
+                  "value": "admin@greenguest.com"
+                }
+              ]
+            },
+            "description": "Get admin by email using query parameter"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Admin by Name",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3333/admin/getAdminByName?name=John Admin",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3333",
+              "path": ["admin", "getAdminByName"],
+              "query": [
+                {
+                  "key": "name",
+                  "value": "John Admin"
+                }
+              ]
+            },
+            "description": "Get admins by name using query parameter"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Active Admins",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3333/admin/getActiveAdmins",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3333",
+              "path": ["admin", "getActiveAdmins"]
+            },
+            "description": "Get all active admin users"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Inactive Admins",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3333/admin/getInactiveAdmins",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3333",
+              "path": ["admin", "getInactiveAdmins"]
+            },
+            "description": "Get all inactive admin users"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Admin",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Updated Admin\",\n  \"position\": \"Senior Administrator\",\n  \"bio\": \"Updated bio with more experience and achievements\",\n  \"timezone\": \"America/Los_Angeles\",\n  \"phoneNumber\": \"+1 (555) 987-6543\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3333/admin/updateAdmin/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3333",
+              "path": ["admin", "updateAdmin", "1"]
+            },
+            "description": "Update admin information"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Admin Password",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"password\": \"NewPassword789\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3333/admin/updateAdmin/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3333",
+              "path": ["admin", "updateAdmin", "1"]
+            },
+            "description": "Update admin password"
+          },
+          "response": []
+        },
+        {
+          "name": "Toggle Admin Status",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3333/admin/toggleAdminStatus/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3333",
+              "path": ["admin", "toggleAdminStatus", "1"]
+            },
+            "description": "Toggle admin active/inactive status"
+          },
+          "response": []
+        },
+        {
+          "name": "Admin Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@greenguest.com\",\n  \"password\": \"Admin123\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3333/admin/loginAdmin",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3333",
+              "path": ["admin", "loginAdmin"]
+            },
+            "description": "Admin login with email and password"
+          },
+          "response": []
+        },
+        {
+          "name": "Admin Login with Updated Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@greenguest.com\",\n  \"password\": \"NewPassword789\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3333/admin/loginAdmin",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3333",
+              "path": ["admin", "loginAdmin"]
+            },
+            "description": "Admin login with updated password"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Admin",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3333/admin/deleteAdminById/2",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3333",
+              "path": ["admin", "deleteAdminById", "2"]
+            },
+            "description": "Delete admin by ID (use ID 2 to keep the first admin)"
+          },
+          "response": []
+        }
+      ],
+      "description": "Complete admin management operations"
+    },
+    {
+      "name": "Validation Testing",
+      "item": [
+        {
+          "name": "Create Admin - Invalid Email",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test Admin\",\n  \"email\": \"invalid-email\",\n  \"password\": \"Test123\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3333/admin/createAdmin",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3333",
+              "path": ["admin", "createAdmin"]
+            },
+            "description": "Test email validation"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Admin - Weak Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test Admin\",\n  \"email\": \"test@example.com\",\n  \"password\": \"123\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3333/admin/createAdmin",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3333",
+              "path": ["admin", "createAdmin"]
+            },
+            "description": "Test password validation"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Admin - Invalid Phone",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test Admin\",\n  \"email\": \"test@example.com\",\n  \"password\": \"Test123\",\n  \"phoneNumber\": \"invalid-phone\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3333/admin/createAdmin",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3333",
+              "path": ["admin", "createAdmin"]
+            },
+            "description": "Test phone number validation"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Admin - Duplicate Email",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Duplicate Admin\",\n  \"email\": \"admin@greenguest.com\",\n  \"password\": \"Test123\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3333/admin/createAdmin",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3333",
+              "path": ["admin", "createAdmin"]
+            },
+            "description": "Test duplicate email validation"
+          },
+          "response": []
+        }
+      ],
+      "description": "Test various validation scenarios"
+    },
+    {
+      "name": "Error Testing",
+      "item": [
+        {
+          "name": "Get Non-existent Admin",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3333/admin/getAdminById/999",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3333",
+              "path": ["admin", "getAdminById", "999"]
+            },
+            "description": "Test 404 error for non-existent admin"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Non-existent Admin",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test Update\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3333/admin/updateAdmin/999",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3333",
+              "path": ["admin", "updateAdmin", "999"]
+            },
+            "description": "Test 404 error when updating non-existent admin"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Non-existent Admin",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3333/admin/deleteAdminById/999",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3333",
+              "path": ["admin", "deleteAdminById", "999"]
+            },
+            "description": "Test 404 error when deleting non-existent admin"
+          },
+          "response": []
+        }
+      ],
+      "description": "Test error handling scenarios"
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3333",
+      "type": "string"
+    }
+  ]
+} 

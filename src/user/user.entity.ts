@@ -18,6 +18,9 @@ export class User {
   @Column()
   password: string;
 
+  @Column({ nullable: true })
+  phoneNumber: string;
+
   @OneToMany(() => Order, order => order.user)
   orders: Order[];
 
@@ -27,7 +30,7 @@ export class User {
   @OneToMany(() => WishlistItem, wishlistItem => wishlistItem.user)
   wishlistItems: WishlistItem[];
 
-  @OneToOne(() => Profile, { cascade: true })
+  @OneToOne(() => Profile, profile => profile.user)
   profile: Profile;
 
   @CreateDateColumn()
