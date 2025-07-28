@@ -1,0 +1,187 @@
+.input-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.input-label {
+  font-weight: 600;
+  color: #2d5a27;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.input-required {
+  color: #e74c3c;
+  font-weight: 700;
+}
+
+.input-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input {
+  width: 100%;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  font-family: inherit;
+  background: white;
+  color: #333;
+  transition: all 0.3s ease;
+  outline: none;
+}
+
+.input:focus {
+  border-color: #2d5a27;
+  box-shadow: 0 0 0 3px rgba(45, 90, 39, 0.1);
+}
+
+.input--outlined {
+  border-color: #2d5a27;
+  background: transparent;
+}
+
+.input--filled {
+  border-color: transparent;
+  background: #f8f9fa;
+}
+
+.input--filled:focus {
+  background: white;
+  border-color: #2d5a27;
+}
+
+/* Input sizes */
+.input--small {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  min-height: 36px;
+}
+
+.input--medium {
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  min-height: 44px;
+}
+
+.input--large {
+  padding: 1rem 1.25rem;
+  font-size: 1.125rem;
+  min-height: 52px;
+}
+
+/* Input states */
+.input--disabled {
+  background: #f5f5f5;
+  color: #999;
+  cursor: not-allowed;
+  border-color: #e0e0e0;
+}
+
+.input--error {
+  border-color: #e74c3c;
+  background: #fff5f5;
+}
+
+.input--error:focus {
+  border-color: #e74c3c;
+  box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.1);
+}
+
+.input--full-width {
+  width: 100%;
+}
+
+/* Input with icons */
+.input--with-icon {
+  padding-left: 2.5rem;
+}
+
+.input--icon-right {
+  padding-left: 1rem;
+  padding-right: 2.5rem;
+}
+
+.input-icon {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  font-size: 1.2em;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.input-icon--left {
+  left: 0.75rem;
+}
+
+.input-icon--right {
+  right: 0.75rem;
+}
+
+.input:focus + .input-icon,
+.input-container:focus-within .input-icon {
+  color: #2d5a27;
+}
+
+/* Input messages */
+.input-message {
+  font-size: 0.875rem;
+  line-height: 1.4;
+  margin-top: 0.25rem;
+}
+
+.input-message--error {
+  color: #e74c3c;
+  font-weight: 500;
+}
+
+.input-message--helper {
+  color: #666;
+}
+
+/* Placeholder styling */
+.input::placeholder {
+  color: #999;
+  opacity: 1;
+}
+
+.input--disabled::placeholder {
+  color: #ccc;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .input--large {
+    padding: 0.875rem 1.125rem;
+    font-size: 1rem;
+    min-height: 48px;
+  }
+  
+  .input--medium {
+    padding: 0.625rem 0.875rem;
+    font-size: 0.9rem;
+    min-height: 40px;
+  }
+  
+  .input-icon {
+    font-size: 1.1em;
+  }
+  
+  .input--with-icon {
+    padding-left: 2.25rem;
+  }
+  
+  .input--icon-right {
+    padding-right: 2.25rem;
+  }
+} 
