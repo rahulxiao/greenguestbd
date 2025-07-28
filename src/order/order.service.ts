@@ -5,7 +5,7 @@ import { Order } from './order.entity';
 import { OrderItem } from './order-item.entity';
 import { Product } from '../product/product.entity';
 import { User } from '../user/user.entity';
-import { PlaceOrderDto, UpdateOrderStatusDto, OrderResponseDto, OrderDetailDto, OrderItemResponseDto } from './order.dto';
+import { PlaceOrderDto, UpdateOrderStatusDto, OrderResponseDto, OrderDetailDto } from './order.dto';
 
 @Injectable()
 export class OrderService {

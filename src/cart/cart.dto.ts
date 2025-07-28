@@ -1,4 +1,4 @@
-import { IsNumber, IsOptional, IsPositive, Min, Max } from 'class-validator';
+import { IsNumber, IsPositive, Min, Max } from 'class-validator';
 
 export class AddToCartDto {
   @IsNumber({}, { message: 'Product ID must be a number' })

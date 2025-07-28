@@ -1,17 +1,5 @@
 import { 
-  Body, 
-  Controller, 
-  Delete, 
-  Param, 
-  Post, 
-  Query, 
-  Get, 
-  Put, 
-  ParseIntPipe,
-  Req,
-  HttpStatus,
-  HttpCode
-} from '@nestjs/common';
+  Body, Controller, Delete, Param, Post, Query, Get, Put, ParseIntPipe,Req,HttpStatus,HttpCode} from '@nestjs/common';
 import { AdminService } from './admin.service';
 import {
   CreateAdminDto,
