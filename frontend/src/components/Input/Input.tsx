@@ -1,5 +1,4 @@
 import React, { forwardRef } from 'react';
-import './Input.css';
 
 interface InputProps {
   type?: 'text' | 'email' | 'password' | 'number' | 'tel' | 'url' | 'search';
@@ -59,29 +58,55 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
 }, ref) => {
   const inputId = id || `input-${Math.random().toString(36).substr(2, 9)}`;
   
+  const getVariantClasses = () => {
+    switch (variant) {
+      case 'default':
+        return 'border-gray-300 bg-white focus:border-green-800 focus:ring-green-800/10';
+      case 'outlined':
+        return 'border-green-800 bg-transparent focus:border-green-800 focus:ring-green-800/10';
+      case 'filled':
+        return 'border-transparent bg-gray-50 focus:bg-white focus:border-green-800 focus:ring-green-800/10';
+      default:
+        return 'border-gray-300 bg-white focus:border-green-800 focus:ring-green-800/10';
+    }
+  };
+
+  const getSizeClasses = () => {
+    switch (size) {
+      case 'small':
+        return 'px-3 py-2 text-sm min-h-[36px]';
+      case 'medium':
+        return 'px-4 py-3 text-base min-h-[44px]';
+      case 'large':
+        return 'px-5 py-4 text-lg min-h-[52px]';
+      default:
+        return 'px-4 py-3 text-base min-h-[44px]';
+    }
+  };
+
   const inputClasses = [
-    'input',
-    `input--${variant}`,
-    `input--${size}`,
-    fullWidth ? 'input--full-width' : '',
-    disabled ? 'input--disabled' : '',
-    error ? 'input--error' : '',
-    icon ? `input--with-icon input--icon-${iconPosition}` : '',
+    'w-full border-2 rounded-lg font-inherit transition-all duration-300 outline-none',
+    getVariantClasses(),
+    getSizeClasses(),
+    fullWidth ? 'w-full' : '',
+    disabled ? 'bg-gray-100 text-gray-500 cursor-not-allowed border-gray-300' : '',
+    error ? 'border-red-500 bg-red-50 focus:border-red-500 focus:ring-red-500/10' : '',
+    icon ? (iconPosition === 'left' ? 'pl-10' : 'pr-10') : '',
     className
   ].filter(Boolean).join(' ');
 
   return (
-    <div className="input-wrapper">
+    <div className="flex flex-col gap-2 font-sans">
       {label && (
-        <label htmlFor={inputId} className="input-label">
+        <label htmlFor={inputId} className="font-semibold text-green-800 text-sm flex items-center gap-1">
           {label}
-          {required && <span className="input-required">*</span>}
+          {required && <span className="text-red-500 font-bold">*</span>}
         </label>
       )}
       
-      <div className="input-container">
+      <div className="relative flex items-center">
         {icon && iconPosition === 'left' && (
-          <span className="input-icon input-icon--left">{icon}</span>
+          <span className="absolute left-3 flex items-center justify-center text-gray-500 text-xl pointer-events-none z-10">{icon}</span>
         )}
         
         <input
@@ -107,12 +132,12 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
         />
         
         {icon && iconPosition === 'right' && (
-          <span className="input-icon input-icon--right">{icon}</span>
+          <span className="absolute right-3 flex items-center justify-center text-gray-500 text-xl pointer-events-none z-10">{icon}</span>
         )}
       </div>
       
       {(error || helperText) && (
-        <div className={`input-message ${error ? 'input-message--error' : 'input-message--helper'}`}>
+        <div className={`text-sm leading-relaxed mt-1 ${error ? 'text-red-500 font-medium' : 'text-gray-600'}`}>
           {error || helperText}
         </div>
       )}
