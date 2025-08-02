@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
-import { Header, Card, Button, Footer } from './components';
+import { Header, Footer, Card, Button } from './components';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import ProductDetails from './pages/ProductDetails';
+import AdminPage from './pages/AdminPage';
+import UserProfile from './pages/UserProfile';
 
 function HomePage() {
   const navigate = useNavigate();
@@ -437,6 +439,8 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/product/:id" element={<ProductDetails />} />
+        <Route path="/admin" element={<AdminPage />} />
+        <Route path="/profile" element={<UserProfile />} />
       </Routes>
     </Router>
   );
