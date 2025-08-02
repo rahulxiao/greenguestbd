@@ -4,11 +4,13 @@ import { Link } from 'react-router-dom';
 interface HeaderProps {
   title?: string;
   onMenuClick?: () => void;
+  showCategories?: boolean;
 }
 
 const Header: React.FC<HeaderProps> = ({ 
   title = "BonsaiMarket", 
-  onMenuClick 
+  onMenuClick,
+  showCategories = true
 }) => {
   return (
     <header className="bg-gradient-to-r from-green-50 to-emerald-50 shadow-lg sticky top-0 z-50 border-b border-green-200">
@@ -64,18 +66,20 @@ const Header: React.FC<HeaderProps> = ({
       </div>
       
       {/* Category Navigation */}
-      <div className="border-t border-green-200 bg-gradient-to-r from-green-100/50 to-emerald-100/50">
-        <div className="max-w-6xl mx-auto px-8">
-          <nav className="hidden md:flex items-center justify-center py-4">
-            <ul className="flex list-none m-0 p-0 gap-8">
-              <li><a href="#trees" className="text-green-700 no-underline font-medium transition-all duration-300 hover:text-green-800 hover:scale-105 flex items-center gap-1">🌳 Trees</a></li>
-              <li><a href="#tools" className="text-green-700 no-underline font-medium transition-all duration-300 hover:text-green-800 hover:scale-105 flex items-center gap-1">🔧 Tools</a></li>
-              <li><a href="#pots" className="text-green-700 no-underline font-medium transition-all duration-300 hover:text-green-800 hover:scale-105 flex items-center gap-1">🏺 Pots</a></li>
-              <li><a href="#accessories" className="text-green-700 no-underline font-medium transition-all duration-300 hover:text-green-800 hover:scale-105 flex items-center gap-1">✨ Accessories</a></li>
-            </ul>
-          </nav>
+      {showCategories && (
+        <div className="border-t border-green-200 bg-gradient-to-r from-green-100/50 to-emerald-100/50">
+          <div className="max-w-6xl mx-auto px-8">
+            <nav className="hidden md:flex items-center justify-center py-4">
+              <ul className="flex list-none m-0 p-0 gap-8">
+                <li><a href="#trees" className="text-green-700 no-underline font-medium transition-all duration-300 hover:text-green-800 hover:scale-105 flex items-center gap-1">🌳 Trees</a></li>
+                <li><a href="#tools" className="text-green-700 no-underline font-medium transition-all duration-300 hover:text-green-800 hover:scale-105 flex items-center gap-1">🔧 Tools</a></li>
+                <li><a href="#pots" className="text-green-700 no-underline font-medium transition-all duration-300 hover:text-green-800 hover:scale-105 flex items-center gap-1">🏺 Pots</a></li>
+                <li><a href="#accessories" className="text-green-700 no-underline font-medium transition-all duration-300 hover:text-green-800 hover:scale-105 flex items-center gap-1">✨ Accessories</a></li>
+              </ul>
+            </nav>
+          </div>
         </div>
-      </div>
+      )}
     </header>
   );
 };

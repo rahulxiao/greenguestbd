@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
-import { Header, Card, Button, Input, Footer } from './components';
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
+import { Header, Card, Button, Footer } from './components';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import ProductDetails from './pages/ProductDetails';
 
 function HomePage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const navigate = useNavigate();
+  const [currentSlide, setCurrentSlide] = useState(0);
 
   const handleGetStarted = () => {
     alert('Get Started clicked!');
@@ -23,6 +24,19 @@ function HomePage() {
   const handleAddToCart = (productName: string) => {
     alert(`${productName} added to cart!`);
   };
+
+  const handleProductClick = (productId: number) => {
+    navigate(`/product/${productId}`);
+  };
+
+  // Auto-scroll carousel
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % popularProducts.length);
+    }, 3000); // Change slide every 3 seconds
+
+    return () => clearInterval(interval);
+  }, []);
 
   // Mock product data
   const products = [
@@ -92,6 +106,38 @@ function HomePage() {
     }
   ];
 
+  // Most popular products for the slider
+  const popularProducts = [
+    {
+      id: 1,
+      name: "Premium Juniper Bonsai",
+      price: "$189.99",
+      image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600",
+      rating: 4.8
+    },
+    {
+      id: 2,
+      name: "Japanese Maple Bonsai",
+      price: "$249.99",
+      image: "https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=600",
+      rating: 4.9
+    },
+    {
+      id: 3,
+      name: "Ficus Bonsai Tree",
+      price: "$159.99",
+      image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=600",
+      rating: 4.6
+    },
+    {
+      id: 4,
+      name: "Pine Bonsai Collection",
+      price: "$299.99",
+      image: "https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=600",
+      rating: 4.9
+    }
+  ];
+
   const categories = [
     {
       name: "Trees",
@@ -142,7 +188,7 @@ function HomePage() {
       <Header onMenuClick={handleMenuClick} />
       
       <main className="flex-1 relative z-10">
-        {/* Hero Section with Nature Background */}
+        {/* Hero Section with Product Slider */}
         <section className="relative py-20 overflow-hidden">
           {/* Hero Background with Nature Elements */}
           <div className="absolute inset-0 bg-gradient-to-br from-green-600 via-emerald-700 to-teal-800">
@@ -154,22 +200,102 @@ function HomePage() {
             <div className="absolute bottom-10 right-10 animate-pulse text-4xl text-green-200/40" style={{animationDelay: '2s'}}>🍀</div>
           </div>
           
-          <div className="relative z-10 max-w-6xl mx-auto px-8 text-center">
-            <div className="bg-white/10 backdrop-blur-sm rounded-3xl p-12 border border-white/20 shadow-2xl">
-              <h1 className="text-6xl font-bold mb-6 text-white drop-shadow-lg">
-                Welcome to BonsaiMarket
-              </h1>
-              <p className="text-xl mb-10 max-w-3xl mx-auto text-green-100 leading-relaxed">
-                Your trusted source for authentic bonsai trees, tools, and accessories. 
-                Cultivating beauty and tranquility for over 20 years.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-6 justify-center">
-                <Button variant="secondary" size="large" onClick={handleGetStarted} className="shadow-lg">
-                  🌱 Shop Now
-                </Button>
-                <Button variant="outline" size="large" onClick={handleLearnMore} className="border-white text-white hover:bg-white hover:text-green-800">
-                  Learn More
-                </Button>
+          <div className="relative z-10 max-w-7xl mx-auto px-8">
+            <div className="flex flex-col justify-center items-center min-h-[200px]">
+              {/* Product Slider - Full Width */}
+              <div className="w-full max-w-6xl">
+                <div className="text-center mb-10">
+                  <h3 className="text-4xl font-bold text-white mb-4">🌟 Most Popular Products</h3>
+                  <p className="text-xl text-green-100">Discover our best-selling bonsai collection</p>
+                </div>
+                
+                {/* Product Carousel */}
+                <div className="relative">
+                  <div className="flex space-x-8 overflow-hidden">
+                    {popularProducts.map((product, index) => (
+                      <div 
+                        key={product.id}
+                        className={`flex-shrink-0 w-96 bg-gradient-to-br from-white/20 via-white/15 to-white/10 backdrop-blur-md rounded-2xl p-8 border border-white/30 hover:border-white/50 hover:bg-gradient-to-br hover:from-white/30 hover:via-white/25 hover:to-white/20 transition-all duration-500 cursor-pointer transform shadow-2xl hover:shadow-white/20 ${
+                          index === currentSlide ? 'scale-105 opacity-100 shadow-white/30' : 'scale-95 opacity-70'
+                        }`}
+                        onClick={() => handleProductClick(product.id)}
+                        style={{
+                          transform: `translateX(-${currentSlide * 100}%)`,
+                          transition: 'transform 0.5s ease-in-out'
+                        }}
+                      >
+                        {/* Product Image Container */}
+                        <div className="relative bg-gradient-to-br from-white/30 to-white/10 rounded-xl h-56 mb-6 overflow-hidden group">
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent"></div>
+                          <img 
+                            src={product.image} 
+                            alt={product.name}
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                          />
+                          {/* Floating Badge */}
+                          <div className="absolute top-4 right-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white px-3 py-1 rounded-full text-sm font-semibold shadow-lg">
+                            Popular
+                          </div>
+                          {/* Hover Overlay */}
+                          <div className="absolute inset-0 bg-gradient-to-t from-green-600/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        </div>
+
+                        {/* Product Info */}
+                        <div className="space-y-4">
+                          <h4 className="text-2xl font-bold text-white mb-2 leading-tight drop-shadow-lg">
+                            {product.name}
+                          </h4>
+                          
+                          {/* Rating and Price Row */}
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2">
+                              <div className="flex items-center">
+                                {renderStars(product.rating)}
+                              </div>
+                              <span className="text-green-200 font-medium">({product.rating})</span>
+                            </div>
+                            <div className="text-right">
+                              <span className="text-3xl font-bold bg-gradient-to-r from-green-300 to-emerald-300 bg-clip-text text-transparent drop-shadow-sm">
+                                {product.price}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Action Button */}
+                          <button 
+                            className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-green-500/25 mt-4"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleProductClick(product.id);
+                            }}
+                          >
+                            View Details →
+                          </button>
+                        </div>
+
+                        {/* Decorative Elements */}
+                        <div className="absolute top-2 left-2 w-2 h-2 bg-green-400 rounded-full opacity-60"></div>
+                        <div className="absolute top-2 right-2 w-1 h-1 bg-emerald-300 rounded-full opacity-40"></div>
+                        <div className="absolute bottom-2 left-2 w-1 h-1 bg-green-300 rounded-full opacity-40"></div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {/* Carousel Navigation Dots */}
+                  <div className="flex justify-center mt-8 space-x-4">
+                    {popularProducts.map((_, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setCurrentSlide(index)}
+                        className={`w-5 h-5 rounded-full transition-all duration-300 ${
+                          index === currentSlide 
+                            ? 'bg-gradient-to-r from-green-400 to-emerald-400 scale-125 shadow-lg shadow-green-400/50' 
+                            : 'bg-white/30 hover:bg-white/50 hover:scale-110'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -193,30 +319,65 @@ function HomePage() {
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
               {products.map((product) => (
-                <Card key={product.id} variant="elevated" size="medium" className="h-full bg-white/80 backdrop-blur-sm border-green-200 hover:border-green-300 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
-                  <div className="bg-gradient-to-br from-green-100 to-emerald-200 h-48 mb-4 rounded-lg flex items-center justify-center relative overflow-hidden">
+                <Card 
+                  key={product.id} 
+                  variant="elevated" 
+                  size="medium" 
+                  className="h-full bg-gradient-to-br from-white/20 via-white/15 to-white/10 backdrop-blur-md border border-white/30 hover:border-white/50 hover:bg-gradient-to-br hover:from-white/30 hover:via-white/25 hover:to-white/20 transition-all duration-500 hover:shadow-xl hover:shadow-white/20 hover:-translate-y-2 cursor-pointer group"
+                  onClick={() => handleProductClick(product.id)}
+                >
+                  {/* Product Image Container */}
+                  <div className="relative bg-gradient-to-br from-green-100 to-emerald-200 h-48 mb-4 rounded-xl flex items-center justify-center overflow-hidden group-hover:scale-105 transition-transform duration-500">
                     <div className="absolute inset-0 bg-gradient-to-br from-green-300/20 to-emerald-400/20"></div>
-                    <span className="text-6xl">🌳</span>
-                    <span className="absolute bottom-2 right-2 text-xs text-green-600 bg-white/80 px-2 py-1 rounded">Product Image</span>
-                  </div>
-                  <h3 className="text-lg font-semibold text-green-800 mb-2">{product.name}</h3>
-                  <p className="text-green-600 text-sm mb-3">{product.description}</p>
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-2xl font-bold text-green-600">{product.price}</span>
-                    <div className="flex items-center gap-1">
-                      {renderStars(product.rating)}
-                      <span className="text-sm text-green-500 ml-1">({product.reviews})</span>
+                    <span className="text-6xl relative z-10">🌳</span>
+                    <span className="absolute bottom-2 right-2 text-xs text-green-600 bg-white/80 px-2 py-1 rounded-full font-medium">Product Image</span>
+                    
+                    {/* Floating Badge */}
+                    <div className="absolute top-2 right-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white px-2 py-1 rounded-full text-xs font-semibold shadow-lg">
+                      New
                     </div>
+                    
+                    {/* Hover Overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-green-600/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   </div>
-                  <Button 
-                    variant="primary" 
-                    size="medium" 
-                    fullWidth
-                    onClick={() => handleAddToCart(product.name)}
-                    className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
-                  >
-                    🛒 Add to Cart
-                  </Button>
+                  
+                  {/* Product Info */}
+                  <div className="space-y-3">
+                    <h3 className="text-lg font-bold text-green-800 mb-2 leading-tight drop-shadow-sm group-hover:text-green-700 transition-colors">
+                      {product.name}
+                    </h3>
+                    <p className="text-green-600 text-sm mb-3 line-clamp-2">{product.description}</p>
+                    
+                    {/* Price and Rating Row */}
+                    <div className="flex items-center justify-between mb-4">
+                      <span className="text-2xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent drop-shadow-sm">
+                        {product.price}
+                      </span>
+                      <div className="flex items-center gap-1">
+                        {renderStars(product.rating)}
+                        <span className="text-sm text-green-500 ml-1 font-medium">({product.reviews})</span>
+                      </div>
+                    </div>
+                    
+                    {/* Action Button */}
+                    <Button 
+                      variant="primary" 
+                      size="medium" 
+                      fullWidth
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleAddToCart(product.name);
+                      }}
+                      className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 transform hover:scale-105 hover:shadow-lg hover:shadow-green-500/25 transition-all duration-300"
+                    >
+                      🛒 Add to Cart
+                    </Button>
+                  </div>
+                  
+                  {/* Decorative Elements */}
+                  <div className="absolute top-2 left-2 w-2 h-2 bg-green-400 rounded-full opacity-60"></div>
+                  <div className="absolute top-2 right-2 w-1 h-1 bg-emerald-300 rounded-full opacity-40"></div>
+                  <div className="absolute bottom-2 left-2 w-1 h-1 bg-green-300 rounded-full opacity-40"></div>
                 </Card>
               ))}
             </div>
@@ -275,6 +436,7 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/product/:id" element={<ProductDetails />} />
       </Routes>
     </Router>
   );
