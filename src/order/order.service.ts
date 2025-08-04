@@ -256,7 +256,7 @@ export class OrderService {
       userId: order.userId,
       user: user ? {
         id: user.id,
-        name: user.name,
+        name: user.fullName,
         email: user.email,
       } : undefined,
       items: orderItems.map(item => ({

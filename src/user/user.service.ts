@@ -135,7 +135,10 @@ export class UserService {
 
   async getUsersByName(name: string): Promise<UserResponseDto[]> {
     const users = await this.userRepo.find({
-      where: { name: name }
+      where: [
+        { firstName: name },
+        { lastName: name }
+      ]
     });
     return users.map(user => this.mapToResponseDto(user));
   }
@@ -153,7 +156,7 @@ export class UserService {
   private mapToResponseDto(user: User): UserResponseDto {
     return {
       id: user.id,
-      name: user.name,
+      name: user.fullName,
       email: user.email,
       phoneNumber: user.phoneNumber,
       createdAt: user.createdAt,
@@ -164,7 +167,7 @@ export class UserService {
   private mapToProfileDto(user: User, profile?: Profile): UserProfileDto {
     return {
       id: user.id,
-      name: user.name,
+      name: user.fullName,
       email: user.email,
       phoneNumber: user.phoneNumber,
       address: profile?.address,

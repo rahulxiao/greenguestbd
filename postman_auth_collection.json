@@ -1,0 +1,143 @@
+{
+  "info": {
+    "name": "GreenGuest Auth API",
+    "description": "Authentication API testing collection for GreenGuest application",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "User Registration",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"User123\",\n  \"confirmPassword\": \"User123\",\n  \"phoneNumber\": \"+1 (555) 123-4567\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3333/api/auth/register",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3333",
+          "path": ["api", "auth", "register"]
+        },
+        "description": "Register a new user with all required fields"
+      },
+      "response": []
+    },
+    {
+      "name": "User Login",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"john@example.com\",\n  \"password\": \"User123\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3333/api/auth/login",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3333",
+          "path": ["api", "auth", "login"]
+        },
+        "description": "User login with email and password"
+      },
+      "response": []
+    },
+    {
+      "name": "Get User Profile (Protected)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{authToken}}"
+          }
+        ],
+        "url": {
+          "raw": "http://localhost:3333/api/auth/profile",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3333",
+          "path": ["api", "auth", "profile"]
+        },
+        "description": "Get current user profile (requires authentication)"
+      },
+      "response": []
+    },
+    {
+      "name": "Refresh Token",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3333/api/auth/refresh",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3333",
+          "path": ["api", "auth", "refresh"]
+        },
+        "description": "Refresh access token using refresh token"
+      },
+      "response": []
+    },
+    {
+      "name": "User Logout",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{authToken}}"
+          }
+        ],
+        "url": {
+          "raw": "http://localhost:3333/api/auth/logout",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3333",
+          "path": ["api", "auth", "logout"]
+        },
+        "description": "Logout user and invalidate token"
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3333/api",
+      "type": "string"
+    },
+    {
+      "key": "authToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refreshToken",
+      "value": "",
+      "type": "string"
+    }
+  ]
+} 

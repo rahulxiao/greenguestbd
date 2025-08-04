@@ -1,12 +1,19 @@
 import { IsEmail, IsString, IsOptional, MinLength, MaxLength, Matches, IsNotEmpty } from 'class-validator';
 
 export class CreateUserDto {
-  @IsString({ message: 'Name must be a string' })
-  @IsNotEmpty({ message: 'Name is required' })
-  @MinLength(2, { message: 'Name must be at least 2 characters long' })
-  @MaxLength(50, { message: 'Name cannot exceed 50 characters' })
-  @Matches(/^[a-zA-Z\s]+$/, { message: 'Name can only contain letters and spaces' })
-  name: string;
+  @IsString({ message: 'First name must be a string' })
+  @IsNotEmpty({ message: 'First name is required' })
+  @MinLength(2, { message: 'First name must be at least 2 characters long' })
+  @MaxLength(25, { message: 'First name cannot exceed 25 characters' })
+  @Matches(/^[a-zA-Z\s]+$/, { message: 'First name can only contain letters and spaces' })
+  firstName: string;
+
+  @IsString({ message: 'Last name must be a string' })
+  @IsNotEmpty({ message: 'Last name is required' })
+  @MinLength(2, { message: 'Last name must be at least 2 characters long' })
+  @MaxLength(25, { message: 'Last name cannot exceed 25 characters' })
+  @Matches(/^[a-zA-Z\s]+$/, { message: 'Last name can only contain letters and spaces' })
+  lastName: string;
 
   @IsEmail({}, { message: 'Please provide a valid email address' })
   @IsNotEmpty({ message: 'Email is required' })
@@ -31,11 +38,18 @@ export class CreateUserDto {
 
 export class UpdateUserDto {
   @IsOptional()
-  @IsString({ message: 'Name must be a string' })
-  @MinLength(2, { message: 'Name must be at least 2 characters long' })
-  @MaxLength(50, { message: 'Name cannot exceed 50 characters' })
-  @Matches(/^[a-zA-Z\s]+$/, { message: 'Name can only contain letters and spaces' })
-  name?: string;
+  @IsString({ message: 'First name must be a string' })
+  @MinLength(2, { message: 'First name must be at least 2 characters long' })
+  @MaxLength(25, { message: 'First name cannot exceed 25 characters' })
+  @Matches(/^[a-zA-Z\s]+$/, { message: 'First name can only contain letters and spaces' })
+  firstName?: string;
+
+  @IsOptional()
+  @IsString({ message: 'Last name must be a string' })
+  @MinLength(2, { message: 'Last name must be at least 2 characters long' })
+  @MaxLength(25, { message: 'Last name cannot exceed 25 characters' })
+  @Matches(/^[a-zA-Z\s]+$/, { message: 'Last name can only contain letters and spaces' })
+  lastName?: string;
 
   @IsOptional()
   @IsEmail({}, { message: 'Please provide a valid email address' })

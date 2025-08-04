@@ -10,7 +10,10 @@ export class User {
   id: number;
 
   @Column()
-  name: string;
+  firstName: string;
+
+  @Column()
+  lastName: string;
 
   @Column({ unique: true })
   email: string;
@@ -20,6 +23,21 @@ export class User {
 
   @Column({ nullable: true })
   phoneNumber: string;
+
+  @Column({ default: true })
+  isActive: boolean;
+
+  @Column({ default: false })
+  isEmailVerified: boolean;
+
+  @Column({ nullable: true })
+  emailVerificationToken: string;
+
+  @Column({ nullable: true })
+  passwordResetToken: string;
+
+  @Column({ nullable: true })
+  passwordResetExpires: Date;
 
   @OneToMany(() => Order, order => order.user)
   orders: Order[];
@@ -38,4 +56,9 @@ export class User {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  // Virtual property for full name
+  get fullName(): string {
+    return `${this.firstName} ${this.lastName}`;
+  }
 } 

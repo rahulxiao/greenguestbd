@@ -104,7 +104,7 @@ export class AdminService {
 
     return {
       id: admin.id,
-      name: admin.name,
+      name: admin.fullName,
       email: admin.email,
       phoneNumber: admin.phoneNumber,
       role: admin.role,
@@ -127,7 +127,10 @@ export class AdminService {
 
   async getAdminsByName(name: string): Promise<AdminResponseDto[]> {
     const admins = await this.adminRepo.find({
-      where: { name: name }
+      where: [
+        { firstName: name },
+        { lastName: name }
+      ]
     });
     return admins.map(admin => this.mapToResponseDto(admin));
   }
@@ -149,7 +152,7 @@ export class AdminService {
   private mapToResponseDto(admin: Admin): AdminResponseDto {
     return {
       id: admin.id,
-      name: admin.name,
+      name: admin.fullName,
       email: admin.email,
       phoneNumber: admin.phoneNumber,
       role: admin.role,

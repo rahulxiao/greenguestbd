@@ -6,7 +6,10 @@ export class Admin {
   id: number;
 
   @Column()
-  name: string;
+  firstName: string;
+
+  @Column()
+  lastName: string;
 
   @Column({ unique: true })
   email: string;
@@ -43,4 +46,8 @@ export class Admin {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  get fullName(): string {
+    return `${this.firstName} ${this.lastName}`;
+  }
 } 

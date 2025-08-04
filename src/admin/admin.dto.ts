@@ -11,12 +11,19 @@ import {
 import { Transform } from 'class-transformer';
 
 export class CreateAdminDto {
-    @IsString({ message: 'Name must be a string' })
-    @IsNotEmpty({ message: 'Name is required' })
-    @MinLength(2, { message: 'Name must be at least 2 characters long' })
-    @MaxLength(50, { message: 'Name cannot exceed 50 characters' })
-    @Matches(/^[a-zA-Z\s]+$/, { message: 'Name can only contain letters and spaces' })
-    name: string;
+    @IsString({ message: 'First name must be a string' })
+    @IsNotEmpty({ message: 'First name is required' })
+    @MinLength(2, { message: 'First name must be at least 2 characters long' })
+    @MaxLength(25, { message: 'First name cannot exceed 25 characters' })
+    @Matches(/^[a-zA-Z\s]+$/, { message: 'First name can only contain letters and spaces' })
+    firstName: string;
+
+    @IsString({ message: 'Last name must be a string' })
+    @IsNotEmpty({ message: 'Last name is required' })
+    @MinLength(2, { message: 'Last name must be at least 2 characters long' })
+    @MaxLength(25, { message: 'Last name cannot exceed 25 characters' })
+    @Matches(/^[a-zA-Z\s]+$/, { message: 'Last name can only contain letters and spaces' })
+    lastName: string;
 
     @IsEmail({}, { message: 'Please provide a valid email address' })
     @IsNotEmpty({ message: 'Email is required' })
@@ -75,11 +82,18 @@ export class CreateAdminDto {
 
 export class UpdateAdminDto {
     @IsOptional()
-    @IsString({ message: 'Name must be a string' })
-    @MinLength(2, { message: 'Name must be at least 2 characters long' })
-    @MaxLength(50, { message: 'Name cannot exceed 50 characters' })
-    @Matches(/^[a-zA-Z\s]+$/, { message: 'Name can only contain letters and spaces' })
-    name?: string;
+    @IsString({ message: 'First name must be a string' })
+    @MinLength(2, { message: 'First name must be at least 2 characters long' })
+    @MaxLength(25, { message: 'First name cannot exceed 25 characters' })
+    @Matches(/^[a-zA-Z\s]+$/, { message: 'First name can only contain letters and spaces' })
+    firstName?: string;
+
+    @IsOptional()
+    @IsString({ message: 'Last name must be a string' })
+    @MinLength(2, { message: 'Last name must be at least 2 characters long' })
+    @MaxLength(25, { message: 'Last name cannot exceed 25 characters' })
+    @Matches(/^[a-zA-Z\s]+$/, { message: 'Last name can only contain letters and spaces' })
+    lastName?: string;
 
     @IsOptional()
     @IsEmail({}, { message: 'Please provide a valid email address' })
@@ -102,7 +116,6 @@ export class UpdateAdminDto {
         message: 'Please provide a valid phone number',
     })
     phoneNumber?: string;
-
 
     @IsOptional()
     @IsString({ message: 'Role must be a string' })
@@ -133,8 +146,6 @@ export class UpdateAdminDto {
         message: 'Please provide a valid timezone format (e.g., America/New_York)',
     })
     timezone?: string;
-
-
 }
 
 export class LoginAdminDto {

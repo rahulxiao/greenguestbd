@@ -20,14 +20,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"John Admin\",\n  \"email\": \"admin@greenguest.com\",\n  \"password\": \"Admin123\",\n  \"phoneNumber\": \"+1 (555) 123-4567\",\n  \"role\": \"super_admin\",\n  \"position\": \"System Administrator\",\n  \"bio\": \"Experienced system administrator with 5+ years in hospitality management\",\n  \"timezone\": \"America/New_York\"\n}"
+              "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Admin\",\n  \"email\": \"admin@greenguest.com\",\n  \"password\": \"Admin123\",\n  \"phoneNumber\": \"+1 (555) 123-4567\",\n  \"role\": \"super_admin\",\n  \"position\": \"System Administrator\",\n  \"bio\": \"Experienced system administrator with 5+ years in hospitality management\",\n  \"timezone\": \"America/New_York\"\n}"
             },
             "url": {
-              "raw": "http://localhost:3333/admin/createAdmin",
+              "raw": "http://localhost:3333/api/admin/createAdmin",
               "protocol": "http",
               "host": ["localhost"],
               "port": "3333",
-              "path": ["admin", "createAdmin"]
+              "path": ["api", "admin", "createAdmin"]
             },
             "description": "Create a new admin user with all required fields"
           },
@@ -45,14 +45,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Sarah Manager\",\n  \"email\": \"sarah@greenguest.com\",\n  \"password\": \"Manager456\",\n  \"phoneNumber\": \"+44 20 7946 0958\",\n  \"role\": \"manager\",\n  \"position\": \"Operations Manager\",\n  \"bio\": \"Operations manager specializing in customer service and team leadership\",\n  \"timezone\": \"Europe/London\"\n}"
+              "raw": "{\n  \"firstName\": \"Sarah\",\n  \"lastName\": \"Manager\",\n  \"email\": \"sarah@greenguest.com\",\n  \"password\": \"Manager456\",\n  \"phoneNumber\": \"+44 20 7946 0958\",\n  \"role\": \"manager\",\n  \"position\": \"Operations Manager\",\n  \"bio\": \"Operations manager specializing in customer service and team leadership\",\n  \"timezone\": \"Europe/London\"\n}"
             },
             "url": {
-              "raw": "http://localhost:3333/admin/createAdmin",
+              "raw": "http://localhost:3333/api/admin/createAdmin",
               "protocol": "http",
               "host": ["localhost"],
               "port": "3333",
-              "path": ["admin", "createAdmin"]
+              "path": ["api", "admin", "createAdmin"]
             },
             "description": "Create a second admin user for testing"
           },
@@ -64,11 +64,11 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:3333/admin/getAllAdmins",
+              "raw": "http://localhost:3333/api/admin/getAllAdmins",
               "protocol": "http",
               "host": ["localhost"],
               "port": "3333",
-              "path": ["admin", "getAllAdmins"]
+              "path": ["api", "admin", "getAllAdmins"]
             },
             "description": "Retrieve all admin users from the database"
           },
@@ -80,11 +80,11 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:3333/admin/getAdminById/1",
+              "raw": "http://localhost:3333/api/admin/getAdminById/1",
               "protocol": "http",
               "host": ["localhost"],
               "port": "3333",
-              "path": ["admin", "getAdminById", "1"]
+              "path": ["api", "admin", "getAdminById", "1"]
             },
             "description": "Get specific admin by ID"
           },
@@ -96,11 +96,11 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:3333/admin/getAdminProfile/1",
+              "raw": "http://localhost:3333/api/admin/getAdminProfile/1",
               "protocol": "http",
               "host": ["localhost"],
               "port": "3333",
-              "path": ["admin", "getAdminProfile", "1"]
+              "path": ["api", "admin", "getAdminProfile", "1"]
             },
             "description": "Get admin profile (public data without sensitive information)"
           },
@@ -112,11 +112,11 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:3333/admin/getAdminByEmail?email=admin@greenguest.com",
+              "raw": "http://localhost:3333/api/admin/getAdminByEmail?email=admin@greenguest.com",
               "protocol": "http",
               "host": ["localhost"],
               "port": "3333",
-              "path": ["admin", "getAdminByEmail"],
+              "path": ["api", "admin", "getAdminByEmail"],
               "query": [
                 {
                   "key": "email",
@@ -134,15 +134,15 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:3333/admin/getAdminByName?name=John Admin",
+              "raw": "http://localhost:3333/api/admin/getAdminByName?name=John",
               "protocol": "http",
               "host": ["localhost"],
               "port": "3333",
-              "path": ["admin", "getAdminByName"],
+              "path": ["api", "admin", "getAdminByName"],
               "query": [
                 {
                   "key": "name",
-                  "value": "John Admin"
+                  "value": "John"
                 }
               ]
             },
@@ -156,11 +156,11 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:3333/admin/getActiveAdmins",
+              "raw": "http://localhost:3333/api/admin/getActiveAdmins",
               "protocol": "http",
               "host": ["localhost"],
               "port": "3333",
-              "path": ["admin", "getActiveAdmins"]
+              "path": ["api", "admin", "getActiveAdmins"]
             },
             "description": "Get all active admin users"
           },
@@ -172,11 +172,11 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:3333/admin/getInactiveAdmins",
+              "raw": "http://localhost:3333/api/admin/getInactiveAdmins",
               "protocol": "http",
               "host": ["localhost"],
               "port": "3333",
-              "path": ["admin", "getInactiveAdmins"]
+              "path": ["api", "admin", "getInactiveAdmins"]
             },
             "description": "Get all inactive admin users"
           },
@@ -194,14 +194,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"John Updated Admin\",\n  \"position\": \"Senior Administrator\",\n  \"bio\": \"Updated bio with more experience and achievements\",\n  \"timezone\": \"America/Los_Angeles\",\n  \"phoneNumber\": \"+1 (555) 987-6543\"\n}"
+              "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Updated Admin\",\n  \"position\": \"Senior Administrator\",\n  \"bio\": \"Updated bio with more experience and achievements\",\n  \"timezone\": \"America/Los_Angeles\",\n  \"phoneNumber\": \"+1 (555) 987-6543\"\n}"
             },
             "url": {
-              "raw": "http://localhost:3333/admin/updateAdmin/1",
+              "raw": "http://localhost:3333/api/admin/updateAdmin/1",
               "protocol": "http",
               "host": ["localhost"],
               "port": "3333",
-              "path": ["admin", "updateAdmin", "1"]
+              "path": ["api", "admin", "updateAdmin", "1"]
             },
             "description": "Update admin information"
           },
@@ -222,11 +222,11 @@
               "raw": "{\n  \"password\": \"NewPassword789\"\n}"
             },
             "url": {
-              "raw": "http://localhost:3333/admin/updateAdmin/1",
+              "raw": "http://localhost:3333/api/admin/updateAdmin/1",
               "protocol": "http",
               "host": ["localhost"],
               "port": "3333",
-              "path": ["admin", "updateAdmin", "1"]
+              "path": ["api", "admin", "updateAdmin", "1"]
             },
             "description": "Update admin password"
           },
@@ -238,11 +238,11 @@
             "method": "PUT",
             "header": [],
             "url": {
-              "raw": "http://localhost:3333/admin/toggleAdminStatus/1",
+              "raw": "http://localhost:3333/api/admin/toggleAdminStatus/1",
               "protocol": "http",
               "host": ["localhost"],
               "port": "3333",
-              "path": ["admin", "toggleAdminStatus", "1"]
+              "path": ["api", "admin", "toggleAdminStatus", "1"]
             },
             "description": "Toggle admin active/inactive status"
           },
@@ -263,11 +263,11 @@
               "raw": "{\n  \"email\": \"admin@greenguest.com\",\n  \"password\": \"Admin123\"\n}"
             },
             "url": {
-              "raw": "http://localhost:3333/admin/loginAdmin",
+              "raw": "http://localhost:3333/api/admin/loginAdmin",
               "protocol": "http",
               "host": ["localhost"],
               "port": "3333",
-              "path": ["admin", "loginAdmin"]
+              "path": ["api", "admin", "loginAdmin"]
             },
             "description": "Admin login with email and password"
           },
@@ -288,11 +288,11 @@
               "raw": "{\n  \"email\": \"admin@greenguest.com\",\n  \"password\": \"NewPassword789\"\n}"
             },
             "url": {
-              "raw": "http://localhost:3333/admin/loginAdmin",
+              "raw": "http://localhost:3333/api/admin/loginAdmin",
               "protocol": "http",
               "host": ["localhost"],
               "port": "3333",
-              "path": ["admin", "loginAdmin"]
+              "path": ["api", "admin", "loginAdmin"]
             },
             "description": "Admin login with updated password"
           },
@@ -304,11 +304,11 @@
             "method": "DELETE",
             "header": [],
             "url": {
-              "raw": "http://localhost:3333/admin/deleteAdminById/2",
+              "raw": "http://localhost:3333/api/admin/deleteAdminById/2",
               "protocol": "http",
               "host": ["localhost"],
               "port": "3333",
-              "path": ["admin", "deleteAdminById", "2"]
+              "path": ["api", "admin", "deleteAdminById", "2"]
             },
             "description": "Delete admin by ID (use ID 2 to keep the first admin)"
           },
@@ -332,14 +332,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Test Admin\",\n  \"email\": \"invalid-email\",\n  \"password\": \"Test123\"\n}"
+              "raw": "{\n  \"firstName\": \"Test\",\n  \"lastName\": \"Admin\",\n  \"email\": \"invalid-email\",\n  \"password\": \"Test123\"\n}"
             },
             "url": {
-              "raw": "http://localhost:3333/admin/createAdmin",
+              "raw": "http://localhost:3333/api/admin/createAdmin",
               "protocol": "http",
               "host": ["localhost"],
               "port": "3333",
-              "path": ["admin", "createAdmin"]
+              "path": ["api", "admin", "createAdmin"]
             },
             "description": "Test email validation"
           },
@@ -357,14 +357,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Test Admin\",\n  \"email\": \"test@example.com\",\n  \"password\": \"123\"\n}"
+              "raw": "{\n  \"firstName\": \"Test\",\n  \"lastName\": \"Admin\",\n  \"email\": \"test@example.com\",\n  \"password\": \"123\"\n}"
             },
             "url": {
-              "raw": "http://localhost:3333/admin/createAdmin",
+              "raw": "http://localhost:3333/api/admin/createAdmin",
               "protocol": "http",
               "host": ["localhost"],
               "port": "3333",
-              "path": ["admin", "createAdmin"]
+              "path": ["api", "admin", "createAdmin"]
             },
             "description": "Test password validation"
           },
@@ -382,14 +382,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Test Admin\",\n  \"email\": \"test@example.com\",\n  \"password\": \"Test123\",\n  \"phoneNumber\": \"invalid-phone\"\n}"
+              "raw": "{\n  \"firstName\": \"Test\",\n  \"lastName\": \"Admin\",\n  \"email\": \"test@example.com\",\n  \"password\": \"Test123\",\n  \"phoneNumber\": \"invalid-phone\"\n}"
             },
             "url": {
-              "raw": "http://localhost:3333/admin/createAdmin",
+              "raw": "http://localhost:3333/api/admin/createAdmin",
               "protocol": "http",
               "host": ["localhost"],
               "port": "3333",
-              "path": ["admin", "createAdmin"]
+              "path": ["api", "admin", "createAdmin"]
             },
             "description": "Test phone number validation"
           },
@@ -407,14 +407,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Duplicate Admin\",\n  \"email\": \"admin@greenguest.com\",\n  \"password\": \"Test123\"\n}"
+              "raw": "{\n  \"firstName\": \"Duplicate\",\n  \"lastName\": \"Admin\",\n  \"email\": \"admin@greenguest.com\",\n  \"password\": \"Test123\"\n}"
             },
             "url": {
-              "raw": "http://localhost:3333/admin/createAdmin",
+              "raw": "http://localhost:3333/api/admin/createAdmin",
               "protocol": "http",
               "host": ["localhost"],
               "port": "3333",
-              "path": ["admin", "createAdmin"]
+              "path": ["api", "admin", "createAdmin"]
             },
             "description": "Test duplicate email validation"
           },
@@ -432,11 +432,11 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:3333/admin/getAdminById/999",
+              "raw": "http://localhost:3333/api/admin/getAdminById/999",
               "protocol": "http",
               "host": ["localhost"],
               "port": "3333",
-              "path": ["admin", "getAdminById", "999"]
+              "path": ["api", "admin", "getAdminById", "999"]
             },
             "description": "Test 404 error for non-existent admin"
           },
@@ -454,14 +454,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Test Update\"\n}"
+              "raw": "{\n  \"firstName\": \"Test\",\n  \"lastName\": \"Update\"\n}"
             },
             "url": {
-              "raw": "http://localhost:3333/admin/updateAdmin/999",
+              "raw": "http://localhost:3333/api/admin/updateAdmin/999",
               "protocol": "http",
               "host": ["localhost"],
               "port": "3333",
-              "path": ["admin", "updateAdmin", "999"]
+              "path": ["api", "admin", "updateAdmin", "999"]
             },
             "description": "Test 404 error when updating non-existent admin"
           },
@@ -473,11 +473,11 @@
             "method": "DELETE",
             "header": [],
             "url": {
-              "raw": "http://localhost:3333/admin/deleteAdminById/999",
+              "raw": "http://localhost:3333/api/admin/deleteAdminById/999",
               "protocol": "http",
               "host": ["localhost"],
               "port": "3333",
-              "path": ["admin", "deleteAdminById", "999"]
+              "path": ["api", "admin", "deleteAdminById", "999"]
             },
             "description": "Test 404 error when deleting non-existent admin"
           },
@@ -490,7 +490,7 @@
   "variable": [
     {
       "key": "baseUrl",
-      "value": "http://localhost:3333",
+      "value": "http://localhost:3333/api",
       "type": "string"
     }
   ]

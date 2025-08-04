@@ -147,7 +147,7 @@
   "variable": [
     {
       "key": "baseUrl",
-      "value": "http://localhost:3333"
+      "value": "http://localhost:3333/api"
     }
   ]
 } 

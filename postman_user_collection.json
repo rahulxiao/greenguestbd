@@ -20,14 +20,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"User123\",\n  \"phoneNumber\": \"+1 (555) 123-4567\"\n}"
+              "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"User123\",\n  \"phoneNumber\": \"+1 (555) 123-4567\"\n}"
             },
             "url": {
-              "raw": "http://localhost:3333/users/createUser",
+              "raw": "http://localhost:3333/api/users/createUser",
               "protocol": "http",
               "host": ["localhost"],
               "port": "3333",
-              "path": ["users", "createUser"]
+              "path": ["api", "users", "createUser"]
             },
             "description": "Create a new user with basic information"
           },
@@ -45,14 +45,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Jane Smith\",\n  \"email\": \"jane@example.com\",\n  \"password\": \"User456\",\n  \"phoneNumber\": \"+44 20 7946 0958\"\n}"
+              "raw": "{\n  \"firstName\": \"Jane\",\n  \"lastName\": \"Smith\",\n  \"email\": \"jane@example.com\",\n  \"password\": \"User456\",\n  \"phoneNumber\": \"+44 20 7946 0958\"\n}"
             },
             "url": {
-              "raw": "http://localhost:3333/users/createUser",
+              "raw": "http://localhost:3333/api/users/createUser",
               "protocol": "http",
               "host": ["localhost"],
               "port": "3333",
-              "path": ["users", "createUser"]
+              "path": ["api", "users", "createUser"]
             },
             "description": "Create a second user for testing"
           },
@@ -64,11 +64,11 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:3333/users/getAllUsers",
+              "raw": "http://localhost:3333/api/users/getAllUsers",
               "protocol": "http",
               "host": ["localhost"],
               "port": "3333",
-              "path": ["users", "getAllUsers"]
+              "path": ["api", "users", "getAllUsers"]
             },
             "description": "Retrieve all users from the database"
           },
@@ -80,11 +80,11 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:3333/users/getUserById/1",
+              "raw": "http://localhost:3333/api/users/getUserById/1",
               "protocol": "http",
               "host": ["localhost"],
               "port": "3333",
-              "path": ["users", "getUserById", "1"]
+              "path": ["api", "users", "getUserById", "1"]
             },
             "description": "Get specific user by ID"
           },
@@ -96,11 +96,11 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:3333/users/getUserProfile/1",
+              "raw": "http://localhost:3333/api/users/getUserProfile/1",
               "protocol": "http",
               "host": ["localhost"],
               "port": "3333",
-              "path": ["users", "getUserProfile", "1"]
+              "path": ["api", "users", "getUserProfile", "1"]
             },
             "description": "Get user profile (includes profile data if available)"
           },
@@ -118,14 +118,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"John Updated Doe\",\n  \"phoneNumber\": \"+1 (555) 987-6543\"\n}"
+              "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Updated Doe\",\n  \"phoneNumber\": \"+1 (555) 987-6543\"\n}"
             },
             "url": {
-              "raw": "http://localhost:3333/users/updateUser/1",
+              "raw": "http://localhost:3333/api/users/updateUser/1",
               "protocol": "http",
               "host": ["localhost"],
               "port": "3333",
-              "path": ["users", "updateUser", "1"]
+              "path": ["api", "users", "updateUser", "1"]
             },
             "description": "Update user basic information"
           },
@@ -146,11 +146,11 @@
               "raw": "{\n  \"address\": \"123 Main Street\",\n  \"city\": \"New York\",\n  \"state\": \"NY\",\n  \"country\": \"USA\",\n  \"postalCode\": \"10001\",\n  \"bio\": \"Software developer with 5+ years of experience\",\n  \"avatar\": \"https://example.com/avatar.jpg\"\n}"
             },
             "url": {
-              "raw": "http://localhost:3333/users/updateUserProfile/1",
+              "raw": "http://localhost:3333/api/users/updateUserProfile/1",
               "protocol": "http",
               "host": ["localhost"],
               "port": "3333",
-              "path": ["users", "updateUserProfile", "1"]
+              "path": ["api", "users", "updateUserProfile", "1"]
             },
             "description": "Update user profile information"
           },
@@ -171,11 +171,11 @@
               "raw": "{\n  \"password\": \"NewPassword789\"\n}"
             },
             "url": {
-              "raw": "http://localhost:3333/users/updateUser/1",
+              "raw": "http://localhost:3333/api/users/updateUser/1",
               "protocol": "http",
               "host": ["localhost"],
               "port": "3333",
-              "path": ["users", "updateUser", "1"]
+              "path": ["api", "users", "updateUser", "1"]
             },
             "description": "Update user password"
           },
@@ -196,11 +196,11 @@
               "raw": "{\n  \"email\": \"john@example.com\",\n  \"password\": \"User123\"\n}"
             },
             "url": {
-              "raw": "http://localhost:3333/users/loginUser",
+              "raw": "http://localhost:3333/api/users/loginUser",
               "protocol": "http",
               "host": ["localhost"],
               "port": "3333",
-              "path": ["users", "loginUser"]
+              "path": ["api", "users", "loginUser"]
             },
             "description": "User login with email and password"
           },
@@ -221,11 +221,11 @@
               "raw": "{\n  \"email\": \"john@example.com\",\n  \"password\": \"NewPassword789\"\n}"
             },
             "url": {
-              "raw": "http://localhost:3333/users/loginUser",
+              "raw": "http://localhost:3333/api/users/loginUser",
               "protocol": "http",
               "host": ["localhost"],
               "port": "3333",
-              "path": ["users", "loginUser"]
+              "path": ["api", "users", "loginUser"]
             },
             "description": "User login with updated password"
           },
@@ -237,11 +237,11 @@
             "method": "DELETE",
             "header": [],
             "url": {
-              "raw": "http://localhost:3333/users/deleteUserById/2",
+              "raw": "http://localhost:3333/api/users/deleteUserById/2",
               "protocol": "http",
               "host": ["localhost"],
               "port": "3333",
-              "path": ["users", "deleteUserById", "2"]
+              "path": ["api", "users", "deleteUserById", "2"]
             },
             "description": "Delete user by ID (use ID 2 to keep the first user)"
           },
@@ -259,11 +259,11 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:3333/users/getUserByEmail?email=john@example.com",
+              "raw": "http://localhost:3333/api/users/getUserByEmail?email=john@example.com",
               "protocol": "http",
               "host": ["localhost"],
               "port": "3333",
-              "path": ["users", "getUserByEmail"],
+              "path": ["api", "users", "getUserByEmail"],
               "query": [
                 {
                   "key": "email",
@@ -281,11 +281,11 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:3333/users/getUsersByName?name=John",
+              "raw": "http://localhost:3333/api/users/getUsersByName?name=John",
               "protocol": "http",
               "host": ["localhost"],
               "port": "3333",
-              "path": ["users", "getUsersByName"],
+              "path": ["api", "users", "getUsersByName"],
               "query": [
                 {
                   "key": "name",
@@ -315,14 +315,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"invalid-email\",\n  \"password\": \"Test123\"\n}"
+              "raw": "{\n  \"firstName\": \"Test\",\n  \"lastName\": \"User\",\n  \"email\": \"invalid-email\",\n  \"password\": \"Test123\"\n}"
             },
             "url": {
-              "raw": "http://localhost:3333/users/createUser",
+              "raw": "http://localhost:3333/api/users/createUser",
               "protocol": "http",
               "host": ["localhost"],
               "port": "3333",
-              "path": ["users", "createUser"]
+              "path": ["api", "users", "createUser"]
             },
             "description": "Test email validation"
           },
@@ -340,14 +340,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"test@example.com\",\n  \"password\": \"123\"\n}"
+              "raw": "{\n  \"firstName\": \"Test\",\n  \"lastName\": \"User\",\n  \"email\": \"test@example.com\",\n  \"password\": \"123\"\n}"
             },
             "url": {
-              "raw": "http://localhost:3333/users/createUser",
+              "raw": "http://localhost:3333/api/users/createUser",
               "protocol": "http",
               "host": ["localhost"],
               "port": "3333",
-              "path": ["users", "createUser"]
+              "path": ["api", "users", "createUser"]
             },
             "description": "Test password validation"
           },
@@ -365,14 +365,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Duplicate User\",\n  \"email\": \"john@example.com\",\n  \"password\": \"Test123\"\n}"
+              "raw": "{\n  \"firstName\": \"Duplicate\",\n  \"lastName\": \"User\",\n  \"email\": \"john@example.com\",\n  \"password\": \"Test123\"\n}"
             },
             "url": {
-              "raw": "http://localhost:3333/users/createUser",
+              "raw": "http://localhost:3333/api/users/createUser",
               "protocol": "http",
               "host": ["localhost"],
               "port": "3333",
-              "path": ["users", "createUser"]
+              "path": ["api", "users", "createUser"]
             },
             "description": "Test duplicate email validation"
           },
@@ -390,11 +390,11 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:3333/users/getUserById/999",
+              "raw": "http://localhost:3333/api/users/getUserById/999",
               "protocol": "http",
               "host": ["localhost"],
               "port": "3333",
-              "path": ["users", "getUserById", "999"]
+              "path": ["api", "users", "getUserById", "999"]
             },
             "description": "Test 404 error for non-existent user"
           },
@@ -412,14 +412,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Test Update\"\n}"
+              "raw": "{\n  \"firstName\": \"Test\",\n  \"lastName\": \"Update\"\n}"
             },
             "url": {
-              "raw": "http://localhost:3333/users/updateUser/999",
+              "raw": "http://localhost:3333/api/users/updateUser/999",
               "protocol": "http",
               "host": ["localhost"],
               "port": "3333",
-              "path": ["users", "updateUser", "999"]
+              "path": ["api", "users", "updateUser", "999"]
             },
             "description": "Test 404 error when updating non-existent user"
           },
@@ -431,11 +431,11 @@
             "method": "DELETE",
             "header": [],
             "url": {
-              "raw": "http://localhost:3333/users/deleteUserById/999",
+              "raw": "http://localhost:3333/api/users/deleteUserById/999",
               "protocol": "http",
               "host": ["localhost"],
               "port": "3333",
-              "path": ["users", "deleteUserById", "999"]
+              "path": ["api", "users", "deleteUserById", "999"]
             },
             "description": "Test 404 error when deleting non-existent user"
           },
@@ -448,7 +448,7 @@
   "variable": [
     {
       "key": "baseUrl",
-      "value": "http://localhost:3333",
+      "value": "http://localhost:3333/api",
       "type": "string"
     }
   ]
