@@ -6,6 +6,8 @@ import Signup from './pages/Signup';
 import ProductDetails from './pages/ProductDetails';
 import AdminPage from './pages/AdminPage';
 import UserProfile from './pages/UserProfile';
+import TermsOfService from './pages/TermsOfService';
+import PrivacyPolicy from './pages/PrivacyPolicy';
 
 function HomePage() {
   const navigate = useNavigate();
@@ -202,10 +204,10 @@ function HomePage() {
             <div className="absolute bottom-10 right-10 animate-pulse text-4xl text-green-200/40" style={{animationDelay: '2s'}}>🍀</div>
           </div>
           
-          <div className="relative z-10 max-w-7xl mx-auto px-8">
+          <div className="relative z-10 max-w-8xl mx-auto px-8">
             <div className="flex flex-col justify-center items-center min-h-[200px]">
               {/* Product Slider - Full Width */}
-              <div className="w-full max-w-6xl">
+              <div className="w-full max-w-7xl">
                 <div className="text-center mb-10">
                   <h3 className="text-4xl font-bold text-white mb-4">🌟 Most Popular Products</h3>
                   <p className="text-xl text-green-100">Discover our best-selling bonsai collection</p>
@@ -308,7 +310,7 @@ function HomePage() {
           {/* Section Background */}
           <div className="absolute inset-0 bg-gradient-to-b from-green-50/50 to-emerald-100/30"></div>
           
-          <div className="relative z-10 max-w-6xl mx-auto px-8">
+          <div className="relative z-10 max-w-7xl mx-auto px-8">
             <div className="text-center mb-12">
               <h2 className="text-4xl font-bold text-green-800 mb-4">🌳 Our Bonsai Collection</h2>
               <p className="text-green-600 text-lg">Discover the art of miniature trees</p>
@@ -323,36 +325,36 @@ function HomePage() {
               {products.map((product) => (
                 <Card 
                   key={product.id} 
-                  variant="elevated" 
-                  size="medium" 
-                  className="h-full bg-gradient-to-br from-white/20 via-white/15 to-white/10 backdrop-blur-md border border-white/30 hover:border-white/50 hover:bg-gradient-to-br hover:from-white/30 hover:via-white/25 hover:to-white/20 transition-all duration-500 hover:shadow-xl hover:shadow-white/20 hover:-translate-y-2 cursor-pointer group"
+                  variant="product" 
+                  size="large" 
+                  className="h-full group"
                   onClick={() => handleProductClick(product.id)}
                 >
                   {/* Product Image Container */}
-                  <div className="relative bg-gradient-to-br from-green-100 to-emerald-200 h-48 mb-4 rounded-xl flex items-center justify-center overflow-hidden group-hover:scale-105 transition-transform duration-500">
-                    <div className="absolute inset-0 bg-gradient-to-br from-green-300/20 to-emerald-400/20"></div>
-                    <span className="text-6xl relative z-10">🌳</span>
-                    <span className="absolute bottom-2 right-2 text-xs text-green-600 bg-white/80 px-2 py-1 rounded-full font-medium">Product Image</span>
+                  <div className="relative bg-gradient-to-br from-green-100 via-emerald-100 to-teal-100 h-48 mb-4 rounded-xl flex items-center justify-center overflow-hidden group-hover:scale-105 transition-transform duration-500">
+                    <div className="absolute inset-0 bg-gradient-to-br from-green-300/20 via-emerald-400/20 to-teal-300/20"></div>
+                    <span className="text-6xl relative z-10 group-hover:scale-110 transition-transform duration-300">🌳</span>
+                    <span className="absolute bottom-2 right-2 text-xs text-green-600 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full font-medium shadow-sm">Product Image</span>
                     
                     {/* Floating Badge */}
-                    <div className="absolute top-2 right-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white px-2 py-1 rounded-full text-xs font-semibold shadow-lg">
+                    <div className="absolute top-2 right-2 bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 text-white px-3 py-1 rounded-full text-xs font-semibold shadow-lg transform hover:scale-105 transition-transform duration-300">
                       New
                     </div>
                     
                     {/* Hover Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-green-600/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-green-600/30 via-emerald-600/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   </div>
                   
                   {/* Product Info */}
                   <div className="space-y-3">
-                    <h3 className="text-lg font-bold text-green-800 mb-2 leading-tight drop-shadow-sm group-hover:text-green-700 transition-colors">
+                    <h3 className="text-lg font-bold text-green-800 mb-2 leading-tight drop-shadow-sm group-hover:text-green-700 transition-colors duration-300">
                       {product.name}
                     </h3>
-                    <p className="text-green-600 text-sm mb-3 line-clamp-2">{product.description}</p>
+                    <p className="text-green-600 text-sm mb-3 line-clamp-2 leading-relaxed">{product.description}</p>
                     
                     {/* Price and Rating Row */}
                     <div className="flex items-center justify-between mb-4">
-                      <span className="text-2xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent drop-shadow-sm">
+                      <span className="text-2xl font-bold bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 bg-clip-text text-transparent drop-shadow-sm">
                         {product.price}
                       </span>
                       <div className="flex items-center gap-1">
@@ -370,16 +372,11 @@ function HomePage() {
                         e.stopPropagation();
                         handleAddToCart(product.name);
                       }}
-                      className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 transform hover:scale-105 hover:shadow-lg hover:shadow-green-500/25 transition-all duration-300"
+                      className="bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 hover:from-green-700 hover:via-emerald-700 hover:to-teal-700 transform hover:scale-105 hover:shadow-lg hover:shadow-green-500/25 transition-all duration-300 font-semibold"
                     >
                       🛒 Add to Cart
                     </Button>
                   </div>
-                  
-                  {/* Decorative Elements */}
-                  <div className="absolute top-2 left-2 w-2 h-2 bg-green-400 rounded-full opacity-60"></div>
-                  <div className="absolute top-2 right-2 w-1 h-1 bg-emerald-300 rounded-full opacity-40"></div>
-                  <div className="absolute bottom-2 left-2 w-1 h-1 bg-green-300 rounded-full opacity-40"></div>
                 </Card>
               ))}
             </div>
@@ -405,7 +402,7 @@ function HomePage() {
             <div className="absolute bottom-10 right-10 text-4xl text-green-400/40 animate-pulse" style={{animationDelay: '3s'}}>🍀</div>
           </div>
           
-          <div className="relative z-10 max-w-6xl mx-auto px-8">
+          <div className="relative z-10 max-w-7xl mx-auto px-8">
             <div className="text-center mb-12">
               <h2 className="text-4xl font-bold text-green-800 mb-4">🌿 Shop by Category</h2>
               <p className="text-green-600 text-lg">Explore our complete bonsai collection</p>
@@ -441,6 +438,8 @@ function App() {
         <Route path="/product/:id" element={<ProductDetails />} />
         <Route path="/admin" element={<AdminPage />} />
         <Route path="/profile" element={<UserProfile />} />
+        <Route path="/terms" element={<TermsOfService />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
       </Routes>
     </Router>
   );

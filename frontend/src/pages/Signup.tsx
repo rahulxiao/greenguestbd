@@ -7,6 +7,7 @@ const Signup: React.FC = () => {
     firstName: '',
     lastName: '',
     email: '',
+    phoneNumber: '',
     password: '',
     confirmPassword: '',
     agreeToTerms: false
@@ -22,19 +23,19 @@ const Signup: React.FC = () => {
 
   const handleSignup = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Phone number validation
+    const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
+    if (!phoneRegex.test(formData.phoneNumber.replace(/\s/g, ''))) {
+      alert('Please enter a valid phone number!');
+      return;
+    }
+    
     if (formData.password !== formData.confirmPassword) {
       alert('Passwords do not match!');
       return;
     }
     alert('Signup functionality would be implemented here!');
-  };
-
-  const handleGoogleSignup = () => {
-    alert('Google signup would be implemented here!');
-  };
-
-  const handleFacebookSignup = () => {
-    alert('Facebook signup would be implemented here!');
   };
 
   return (
@@ -58,7 +59,7 @@ const Signup: React.FC = () => {
       </div>
 
       <div className="relative z-10 min-h-screen flex items-center justify-center px-4 py-8">
-        <div className="w-full max-w-lg">
+        <div className="w-full max-w-xl">
           {/* Header */}
           <div className="text-center mb-8">
             <div className="flex justify-center mb-4">
@@ -109,6 +110,18 @@ const Signup: React.FC = () => {
                 required
                 fullWidth
                 icon="📧"
+              />
+
+              <Input
+                label="Phone Number"
+                type="tel"
+                name="phoneNumber"
+                placeholder="Enter your phone number (e.g., +1234567890)"
+                value={formData.phoneNumber}
+                onChange={handleInputChange}
+                required
+                fullWidth
+                icon="📱"
               />
 
               <Input
@@ -167,38 +180,6 @@ const Signup: React.FC = () => {
                 🌱 Create Account
               </Button>
             </form>
-
-            {/* Divider */}
-            <div className="my-6 flex items-center">
-              <div className="flex-1 border-t border-green-200"></div>
-              <span className="px-4 text-sm text-green-600">or sign up with</span>
-              <div className="flex-1 border-t border-green-200"></div>
-            </div>
-
-            {/* Social Signup Buttons */}
-            <div className="space-y-3">
-              <Button
-                variant="outline"
-                size="medium"
-                fullWidth
-                onClick={handleGoogleSignup}
-                className="border-green-300 text-green-700 hover:bg-green-50"
-              >
-                <span className="mr-2">🔍</span>
-                Continue with Google
-              </Button>
-              
-              <Button
-                variant="outline"
-                size="medium"
-                fullWidth
-                onClick={handleFacebookSignup}
-                className="border-green-300 text-green-700 hover:bg-green-50"
-              >
-                <span className="mr-2">📘</span>
-                Continue with Facebook
-              </Button>
-            </div>
 
             {/* Login Link */}
             <div className="mt-8 text-center">

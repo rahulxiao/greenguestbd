@@ -15,7 +15,7 @@ const Header: React.FC<HeaderProps> = ({
   return (
     <header className="bg-gradient-to-r from-green-50 to-emerald-50 shadow-lg sticky top-0 z-50 border-b border-green-200">
       {/* Main Navigation */}
-      <div className="max-w-6xl mx-auto px-8 py-4">
+      <div className="max-w-7xl mx-auto px-8 py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-3 hover:scale-105 transition-transform duration-300">
@@ -68,7 +68,7 @@ const Header: React.FC<HeaderProps> = ({
       {/* Category Navigation */}
       {showCategories && (
         <div className="border-t border-green-200 bg-gradient-to-r from-green-100/50 to-emerald-100/50">
-          <div className="max-w-6xl mx-auto px-8">
+          <div className="max-w-7xl mx-auto px-8">
             <nav className="hidden md:flex items-center justify-center py-4">
               <ul className="flex list-none m-0 p-0 gap-8">
                 <li><a href="#trees" className="text-green-700 no-underline font-medium transition-all duration-300 hover:text-green-800 hover:scale-105 flex items-center gap-1">🌳 Trees</a></li>

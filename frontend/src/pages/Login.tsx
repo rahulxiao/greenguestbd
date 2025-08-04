@@ -12,14 +12,6 @@ const Login: React.FC = () => {
     alert('Login functionality would be implemented here!');
   };
 
-  const handleGoogleLogin = () => {
-    alert('Google login would be implemented here!');
-  };
-
-  const handleFacebookLogin = () => {
-    alert('Facebook login would be implemented here!');
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 relative overflow-hidden">
       {/* Background Nature Elements */}
@@ -41,7 +33,7 @@ const Login: React.FC = () => {
       </div>
 
       <div className="relative z-10 min-h-screen flex items-center justify-center px-4">
-        <div className="w-full max-w-md">
+        <div className="w-full max-w-lg">
           {/* Header */}
           <div className="text-center mb-8">
             <div className="flex justify-center mb-4">
@@ -103,38 +95,6 @@ const Login: React.FC = () => {
                 🌱 Sign In
               </Button>
             </form>
-
-            {/* Divider */}
-            <div className="my-6 flex items-center">
-              <div className="flex-1 border-t border-green-200"></div>
-              <span className="px-4 text-sm text-green-600">or continue with</span>
-              <div className="flex-1 border-t border-green-200"></div>
-            </div>
-
-            {/* Social Login Buttons */}
-            <div className="space-y-3">
-              <Button
-                variant="outline"
-                size="medium"
-                fullWidth
-                onClick={handleGoogleLogin}
-                className="border-green-300 text-green-700 hover:bg-green-50"
-              >
-                <span className="mr-2">🔍</span>
-                Continue with Google
-              </Button>
-              
-              <Button
-                variant="outline"
-                size="medium"
-                fullWidth
-                onClick={handleFacebookLogin}
-                className="border-green-300 text-green-700 hover:bg-green-50"
-              >
-                <span className="mr-2">📘</span>
-                Continue with Facebook
-              </Button>
-            </div>
 
             {/* Sign Up Link */}
             <div className="mt-8 text-center">
