@@ -8,17 +8,25 @@ import AdminPage from './pages/AdminPage';
 import UserProfile from './pages/UserProfile';
 import TermsOfService from './pages/TermsOfService';
 import PrivacyPolicy from './pages/PrivacyPolicy';
+import Cart from './pages/Cart';
+import Checkout from './pages/Checkout';
+import OrderConfirmation from './pages/OrderConfirmation';
+import Wishlist from './pages/Wishlist';
+import Search from './pages/Search';
+import Orders from './pages/Orders';
+import About from './pages/About';
+import Contact from './pages/Contact';
 
 function HomePage() {
   const navigate = useNavigate();
   const [currentSlide, setCurrentSlide] = useState(0);
 
   const handleGetStarted = () => {
-    alert('Get Started clicked!');
+    navigate('/search');
   };
 
   const handleLearnMore = () => {
-    alert('Learn More clicked!');
+    navigate('/about');
   };
 
   const handleMenuClick = () => {
@@ -27,10 +35,31 @@ function HomePage() {
 
   const handleAddToCart = (productName: string) => {
     alert(`${productName} added to cart!`);
+    navigate('/cart');
   };
 
   const handleProductClick = (productId: number) => {
     navigate(`/product/${productId}`);
+  };
+
+  const handleCategoryClick = (categoryName: string) => {
+    navigate(`/search?category=${categoryName.toLowerCase()}`);
+  };
+
+  const handleViewAllProducts = () => {
+    navigate('/search');
+  };
+
+  const handleViewCart = () => {
+    navigate('/cart');
+  };
+
+  const handleViewWishlist = () => {
+    navigate('/wishlist');
+  };
+
+  const handleContactUs = () => {
+    navigate('/contact');
   };
 
   // Auto-scroll carousel
@@ -318,7 +347,17 @@ function HomePage() {
             
             <div className="flex justify-between items-center mb-8">
               <h3 className="text-2xl font-bold text-green-800">Trees</h3>
-              <span className="text-green-600 bg-green-100 px-4 py-2 rounded-full">Showing {products.length} products</span>
+              <div className="flex items-center gap-4">
+                <span className="text-green-600 bg-green-100 px-4 py-2 rounded-full">Showing {products.length} products</span>
+                <Button 
+                  variant="secondary" 
+                  size="medium" 
+                  onClick={handleViewAllProducts}
+                  className="bg-green-600 text-white hover:bg-green-700"
+                >
+                  View All Products →
+                </Button>
+              </div>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
@@ -409,7 +448,13 @@ function HomePage() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
               {categories.map((category, index) => (
-                <Card key={index} variant="elevated" size="medium" className="text-center bg-white/90 backdrop-blur-sm border-green-200 hover:border-green-300 transition-all duration-300 hover:shadow-xl hover:-translate-y-2 group">
+                <Card 
+                  key={index} 
+                  variant="elevated" 
+                  size="medium" 
+                  className="text-center bg-white/90 backdrop-blur-sm border-green-200 hover:border-green-300 transition-all duration-300 hover:shadow-xl hover:-translate-y-2 group cursor-pointer"
+                  onClick={() => handleCategoryClick(category.name)}
+                >
                   <div className="bg-gradient-to-br from-green-200 to-emerald-300 h-32 mb-4 rounded-lg flex items-center justify-center relative overflow-hidden group-hover:scale-105 transition-transform duration-300">
                     <div className="absolute inset-0 bg-gradient-to-br from-green-300/30 to-emerald-400/30"></div>
                     <span className="text-5xl group-hover:scale-110 transition-transform duration-300">{category.icon}</span>
@@ -418,6 +463,45 @@ function HomePage() {
                   <p className="text-green-600 text-sm">{category.description}</p>
                 </Card>
               ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Call-to-Action Section */}
+        <section className="py-16 bg-gradient-to-br from-green-500 to-emerald-600 text-white">
+          <div className="relative z-10 max-w-7xl mx-auto px-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+              <div className="text-center">
+                <h3 className="text-3xl font-bold mb-4">Quick Links</h3>
+                <ul className="space-y-4">
+                  <li onClick={handleViewAllProducts} className="cursor-pointer hover:text-white/90 transition-colors">All Products</li>
+                  <li onClick={handleViewCart} className="cursor-pointer hover:text-white/90 transition-colors">View Cart</li>
+                  <li onClick={handleViewWishlist} className="cursor-pointer hover:text-white/90 transition-colors">Wishlist</li>
+                  <li onClick={handleContactUs} className="cursor-pointer hover:text-white/90 transition-colors">Contact Us</li>
+                </ul>
+              </div>
+              <div className="text-center">
+                <h3 className="text-3xl font-bold mb-4">About Us</h3>
+                <p className="text-lg mb-4">
+                  We are passionate about bonsai, offering a wide range of high-quality bonsai trees, tools, and accessories.
+                  Our mission is to provide exceptional bonsai experiences for enthusiasts of all levels.
+                </p>
+                <Button variant="secondary" size="medium" onClick={handleLearnMore} className="bg-white text-green-600 hover:bg-white/90">
+                  Learn More →
+                </Button>
+              </div>
+              <div className="text-center">
+                <h3 className="text-3xl font-bold mb-4">Newsletter</h3>
+                <p className="text-lg mb-4">
+                  Subscribe to our newsletter to receive updates about new products, promotions, and bonsai tips.
+                </p>
+                <div className="flex gap-2">
+                  <input type="email" placeholder="Enter your email" className="p-3 rounded-lg border border-white/50 text-black" />
+                  <Button variant="primary" size="medium" className="bg-white text-green-600 hover:bg-white/90">
+                    Subscribe
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -440,6 +524,14 @@ function App() {
         <Route path="/profile" element={<UserProfile />} />
         <Route path="/terms" element={<TermsOfService />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/cart" element={<Cart />} />
+        <Route path="/checkout" element={<Checkout />} />
+        <Route path="/order-confirmation" element={<OrderConfirmation />} />
+        <Route path="/wishlist" element={<Wishlist />} />
+        <Route path="/search" element={<Search />} />
+        <Route path="/orders" element={<Orders />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/contact" element={<Contact />} />
       </Routes>
     </Router>
   );

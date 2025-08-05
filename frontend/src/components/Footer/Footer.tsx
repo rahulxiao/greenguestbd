@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 interface FooterProps {
   companyName?: string;
@@ -43,10 +44,10 @@ const Footer: React.FC<FooterProps> = ({
               🛍️ Shop
             </h4>
             <ul className="list-none m-0 p-0 flex flex-col gap-3">
-              <li><a href="#bonsai-trees" className="text-green-100 no-underline transition-all duration-300 text-sm hover:text-green-200 hover:translate-x-1 flex items-center gap-2">🌳 Bonsai Trees</a></li>
-              <li><a href="#tools-supplies" className="text-green-100 no-underline transition-all duration-300 text-sm hover:text-green-200 hover:translate-x-1 flex items-center gap-2">🔧 Tools & Supplies</a></li>
-              <li><a href="#pots-containers" className="text-green-100 no-underline transition-all duration-300 text-sm hover:text-green-200 hover:translate-x-1 flex items-center gap-2">🏺 Pots & Containers</a></li>
-              <li><a href="#care-accessories" className="text-green-100 no-underline transition-all duration-300 text-sm hover:text-green-200 hover:translate-x-1 flex items-center gap-2">✨ Care Accessories</a></li>
+              <li><Link to="/search" className="text-green-100 no-underline transition-all duration-300 text-sm hover:text-green-200 hover:translate-x-1 flex items-center gap-2">🔍 Search Products</Link></li>
+              <li><Link to="/cart" className="text-green-100 no-underline transition-all duration-300 text-sm hover:text-green-200 hover:translate-x-1 flex items-center gap-2">🛒 Shopping Cart</Link></li>
+              <li><Link to="/wishlist" className="text-green-100 no-underline transition-all duration-300 text-sm hover:text-green-200 hover:translate-x-1 flex items-center gap-2">❤️ Wishlist</Link></li>
+              <li><Link to="/orders" className="text-green-100 no-underline transition-all duration-300 text-sm hover:text-green-200 hover:translate-x-1 flex items-center gap-2">📦 Order History</Link></li>
             </ul>
           </div>
           
@@ -56,10 +57,10 @@ const Footer: React.FC<FooterProps> = ({
               🆘 Support
             </h4>
             <ul className="list-none m-0 p-0 flex flex-col gap-3">
-              <li><a href="#care-guides" className="text-green-100 no-underline transition-all duration-300 text-sm hover:text-green-200 hover:translate-x-1 flex items-center gap-2">📖 Care Guides</a></li>
-              <li><a href="#shipping-info" className="text-green-100 no-underline transition-all duration-300 text-sm hover:text-green-200 hover:translate-x-1 flex items-center gap-2">🚚 Shipping Info</a></li>
-              <li><a href="#returns" className="text-green-100 no-underline transition-all duration-300 text-sm hover:text-green-200 hover:translate-x-1 flex items-center gap-2">↩️ Returns</a></li>
-              <li><a href="#contact-us" className="text-green-100 no-underline transition-all duration-300 text-sm hover:text-green-200 hover:translate-x-1 flex items-center gap-2">📞 Contact Us</a></li>
+              <li><Link to="/about" className="text-green-100 no-underline transition-all duration-300 text-sm hover:text-green-200 hover:translate-x-1 flex items-center gap-2">ℹ️ About Us</Link></li>
+              <li><Link to="/contact" className="text-green-100 no-underline transition-all duration-300 text-sm hover:text-green-200 hover:translate-x-1 flex items-center gap-2">📞 Contact Us</Link></li>
+              <li><Link to="/terms" className="text-green-100 no-underline transition-all duration-300 text-sm hover:text-green-200 hover:translate-x-1 flex items-center gap-2">📋 Terms of Service</Link></li>
+              <li><Link to="/privacy" className="text-green-100 no-underline transition-all duration-300 text-sm hover:text-green-200 hover:translate-x-1 flex items-center gap-2">🔒 Privacy Policy</Link></li>
             </ul>
           </div>
           
@@ -69,13 +70,13 @@ const Footer: React.FC<FooterProps> = ({
               🌐 Connect
             </h4>
             <div className="flex gap-3">
-              <a href="#" className="w-12 h-12 bg-gradient-to-br from-green-700 to-emerald-700 rounded-xl flex items-center justify-center text-white hover:from-green-600 hover:to-emerald-600 transition-all duration-300 hover:scale-110 shadow-lg">
+              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="w-12 h-12 bg-gradient-to-br from-green-700 to-emerald-700 rounded-xl flex items-center justify-center text-white hover:from-green-600 hover:to-emerald-600 transition-all duration-300 hover:scale-110 shadow-lg">
                 📘
               </a>
-              <a href="#" className="w-12 h-12 bg-gradient-to-br from-green-700 to-emerald-700 rounded-xl flex items-center justify-center text-white hover:from-green-600 hover:to-emerald-600 transition-all duration-300 hover:scale-110 shadow-lg">
+              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="w-12 h-12 bg-gradient-to-br from-green-700 to-emerald-700 rounded-xl flex items-center justify-center text-white hover:from-green-600 hover:to-emerald-600 transition-all duration-300 hover:scale-110 shadow-lg">
                 🐦
               </a>
-              <a href="#" className="w-12 h-12 bg-gradient-to-br from-green-700 to-emerald-700 rounded-xl flex items-center justify-center text-white hover:from-green-600 hover:to-emerald-600 transition-all duration-300 hover:scale-110 shadow-lg">
+              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="w-12 h-12 bg-gradient-to-br from-green-700 to-emerald-700 rounded-xl flex items-center justify-center text-white hover:from-green-600 hover:to-emerald-600 transition-all duration-300 hover:scale-110 shadow-lg">
                 📷
               </a>
             </div>
@@ -89,11 +90,11 @@ const Footer: React.FC<FooterProps> = ({
               © {year} {companyName}. All rights reserved. 🌱
             </p>
             <div className="flex items-center gap-4 flex-wrap">
-              <a href="#terms" className="text-green-100 no-underline text-sm transition-colors duration-300 hover:text-green-200">Terms of Service</a>
+              <Link to="/terms" className="text-green-100 no-underline text-sm transition-colors duration-300 hover:text-green-200">Terms of Service</Link>
               <span className="text-green-200 font-semibold">•</span>
-              <a href="#privacy" className="text-green-100 no-underline text-sm transition-colors duration-300 hover:text-green-200">Privacy Policy</a>
+              <Link to="/privacy" className="text-green-100 no-underline text-sm transition-colors duration-300 hover:text-green-200">Privacy Policy</Link>
               <span className="text-green-200 font-semibold">•</span>
-              <a href="#cookies" className="text-green-100 no-underline text-sm transition-colors duration-300 hover:text-green-200">Cookie Policy</a>
+              <Link to="/contact" className="text-green-100 no-underline text-sm transition-colors duration-300 hover:text-green-200">Contact Us</Link>
             </div>
           </div>
         </div>
