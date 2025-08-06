@@ -1,9 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserEvent, DailyMetrics, ProductAnalytics } from './analytics.entity';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Inject } from '@nestjs/common';
 import { Cache } from 'cache-manager';
 import { Cron, CronExpression } from '@nestjs/schedule';
 
@@ -16,7 +15,7 @@ export class AnalyticsService {
     private readonly dailyMetricsRepo: Repository<DailyMetrics>,
     @InjectRepository(ProductAnalytics)
     private readonly productAnalyticsRepo: Repository<ProductAnalytics>,
-    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
   ) {}
 
   async trackEvent(

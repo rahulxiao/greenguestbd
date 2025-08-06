@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Inject } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { 
@@ -10,9 +10,19 @@ import {
 } from './inventory.entity';
 import { Product } from '../product/product.entity';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Inject } from '@nestjs/common';
 import { Cache } from 'cache-manager';
 import { Cron, CronExpression } from '@nestjs/schedule';
+
+interface InventoryHistoryData {
+  productId: number;
+  type: 'in' | 'out' | 'adjustment' | 'return';
+  quantity: number;
+  reason?: string;
+  reference?: string;
+  supplierId?: number;
+  cost?: number;
+  notes?: string;
+}
 
 @Injectable()
 export class InventoryService {
@@ -29,7 +39,7 @@ export class InventoryService {
     private readonly purchaseOrderItemRepo: Repository<PurchaseOrderItem>,
     @InjectRepository(Product)
     private readonly productRepo: Repository<Product>,
-    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
   ) {}
 
   // Supplier Management
@@ -56,35 +66,17 @@ export class InventoryService {
   }
 
   // Inventory History
-  async addInventoryHistory(
-    productId: number,
-    type: 'in' | 'out' | 'adjustment' | 'return',
-    quantity: number,
-    reason?: string,
-    reference?: string,
-    supplierId?: number,
-    cost?: number,
-    notes?: string,
-  ): Promise<InventoryHistory> {
-    const history = this.inventoryHistoryRepo.create({
-      productId,
-      type,
-      quantity,
-      reason,
-      reference,
-      supplierId,
-      cost,
-      notes,
-    });
+  async addInventoryHistory(data: InventoryHistoryData): Promise<InventoryHistory> {
+    const history = this.inventoryHistoryRepo.create(data);
 
     const savedHistory = await this.inventoryHistoryRepo.save(history);
 
     // Update product stock
-    await this.updateProductStock(productId, type, quantity);
+    await this.updateProductStock(data.productId, data.type, data.quantity);
 
     // Clear cache
-    await this.cacheManager.del(`product_${productId}_history`);
-    await this.cacheManager.del(`product_${productId}_stock`);
+    await this.cacheManager.del(`product_${data.productId}_history`);
+    await this.cacheManager.del(`product_${data.productId}_stock`);
 
     return savedHistory;
   }
@@ -225,8 +217,6 @@ export class InventoryService {
     notes?: string,
     expectedDeliveryDate?: Date,
   ): Promise<PurchaseOrder> {
-    const supplier = await this.getSupplier(supplierId);
-    
     const purchaseOrder = this.purchaseOrderRepo.create({
       supplierId,
       status: 'draft',
@@ -293,15 +283,15 @@ export class InventoryService {
     for (const item of items) {
       if (item.receivedQuantity !== item.quantity) {
         // Add received quantity to inventory
-        await this.addInventoryHistory(
-          item.productId,
-          'in',
-          item.receivedQuantity || item.quantity,
-          'Purchase order received',
-          `PO-${po.id}`,
-          po.supplierId,
-          item.unitCost,
-        );
+        await this.addInventoryHistory({
+          productId: item.productId,
+          type: 'in',
+          quantity: item.receivedQuantity || item.quantity,
+          reason: 'Purchase order received',
+          reference: `PO-${po.id}`,
+          supplierId: po.supplierId,
+          cost: item.unitCost,
+        });
 
         // Update PO item
         await this.purchaseOrderItemRepo.update(item.id, {

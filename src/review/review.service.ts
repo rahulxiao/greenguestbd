@@ -25,7 +25,7 @@ export class ReviewService {
     private readonly productRepo: Repository<Product>,
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
-    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
   ) {}
 
   async createReview(userId: number, productId: number, createReviewDto: CreateReviewDto): Promise<ReviewResponseDto> {
