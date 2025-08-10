@@ -59,8 +59,22 @@ const Card: React.FC<CardProps> = ({
     className
   ].filter(Boolean).join(' ');
 
+  const handleKeyDown = (event: React.KeyboardEvent) => {
+    if (onClick && (event.key === 'Enter' || event.key === ' ')) {
+      event.preventDefault();
+      onClick();
+    }
+  };
+
   return (
-    <div className={cardClasses} onClick={onClick}>
+    <div 
+      className={cardClasses} 
+      onClick={onClick}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={onClick ? handleKeyDown : undefined}
+      aria-label={onClick && title ? `Click to interact with ${title}` : undefined}
+    >
       {/* Decorative background pattern for product cards */}
       {variant === 'product' && (
         <div className="absolute inset-0 bg-gradient-to-br from-green-100/20 via-transparent to-emerald-100/20 opacity-0 hover:opacity-100 transition-opacity duration-500"></div>

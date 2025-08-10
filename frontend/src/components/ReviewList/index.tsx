@@ -118,7 +118,7 @@ const ReviewList: React.FC<ReviewListProps> = ({ reviews, onHelpfulVote }) => {
                   <img
                     key={index}
                     src={image}
-                    alt={`Review image ${index + 1}`}
+                    alt={`Review ${index + 1}`}
                     className="w-20 h-20 object-cover rounded-lg border border-gray-200 flex-shrink-0"
                   />
                 ))}
