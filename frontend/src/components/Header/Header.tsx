@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, Menu, X, ShoppingCart, Heart, User } from 'lucide-react';
+import { Search, Menu, X, ShoppingCart, Heart } from 'lucide-react';
 
 interface HeaderProps {
   title?: string;
