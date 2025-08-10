@@ -30,39 +30,41 @@ const Button: React.FC<ButtonProps> = ({
   const getVariantClasses = () => {
     switch (variant) {
       case 'primary':
-        return 'bg-gradient-to-br from-green-800 to-green-600 text-white shadow-lg hover:shadow-xl hover:-translate-y-0.5';
+        return 'bg-gradient-to-br from-green-800 to-green-600 text-white shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 active:shadow-lg';
       case 'secondary':
-        return 'bg-gradient-to-br from-green-300 to-teal-300 text-green-800 shadow-lg hover:shadow-xl hover:-translate-y-0.5';
+        return 'bg-gradient-to-br from-green-300 to-teal-300 text-green-800 shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 active:shadow-lg';
       case 'outline':
-        return 'bg-transparent text-green-800 border-2 border-green-800 hover:bg-green-800 hover:text-white hover:-translate-y-0.5';
+        return 'bg-transparent text-green-800 border-2 border-green-800 hover:bg-green-800 hover:text-white hover:-translate-y-0.5 active:translate-y-0';
       case 'ghost':
-        return 'bg-transparent text-green-800 hover:bg-green-800/10 hover:-translate-y-0.5';
+        return 'bg-transparent text-green-800 hover:bg-green-800/10 hover:-translate-y-0.5 active:translate-y-0';
       case 'danger':
-        return 'bg-gradient-to-br from-red-500 to-red-600 text-white shadow-lg hover:shadow-xl hover:-translate-y-0.5';
+        return 'bg-gradient-to-br from-red-500 to-red-600 text-white shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 active:shadow-lg';
       default:
-        return 'bg-gradient-to-br from-green-800 to-green-600 text-white shadow-lg hover:shadow-xl hover:-translate-y-0.5';
+        return 'bg-gradient-to-br from-green-800 to-green-600 text-white shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 active:shadow-lg';
     }
   };
 
   const getSizeClasses = () => {
     switch (size) {
       case 'small':
-        return 'px-4 py-2 text-sm min-h-[36px]';
+        return 'px-3 sm:px-4 py-2 text-sm min-h-[44px] sm:min-h-[36px]'; // Mobile: 44px touch target
       case 'medium':
-        return 'px-6 py-3 text-base min-h-[44px]';
+        return 'px-4 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base min-h-[48px] sm:min-h-[44px]'; // Mobile: 48px touch target
       case 'large':
-        return 'px-8 py-4 text-lg min-h-[52px]';
+        return 'px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg min-h-[52px] sm:min-h-[52px]'; // Mobile: 52px touch target
       default:
-        return 'px-6 py-3 text-base min-h-[44px]';
+        return 'px-4 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base min-h-[48px] sm:min-h-[44px]';
     }
   };
 
   const buttonClasses = [
     'inline-flex items-center justify-center gap-2 border-none rounded-lg font-semibold cursor-pointer transition-all duration-300 ease-in-out font-inherit relative overflow-hidden',
+    'focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2',
+    'touch-manipulation', // Better touch handling on mobile
     getVariantClasses(),
     getSizeClasses(),
     fullWidth ? 'w-full' : '',
-    disabled ? 'opacity-60 cursor-not-allowed hover:transform-none hover:shadow-none' : '',
+    disabled ? 'opacity-60 cursor-not-allowed hover:transform-none hover:shadow-none active:transform-none' : '',
     loading ? 'cursor-wait' : '',
     className
   ].filter(Boolean).join(' ');
@@ -79,6 +81,7 @@ const Button: React.FC<ButtonProps> = ({
       onClick={handleClick}
       disabled={disabled || loading}
       type={type}
+      aria-disabled={disabled || loading}
     >
       {loading && (
         <span className="flex items-center justify-center w-4 h-4 animate-spin">
@@ -92,13 +95,13 @@ const Button: React.FC<ButtonProps> = ({
       )}
       
       {!loading && icon && iconPosition === 'left' && (
-        <span className="flex items-center justify-center text-xl mr-1">{icon}</span>
+        <span className="flex items-center justify-center text-lg sm:text-xl mr-1">{icon}</span>
       )}
       
-      <span className="flex items-center gap-2">{children}</span>
+      <span className="flex items-center gap-1 sm:gap-2">{children}</span>
       
       {!loading && icon && iconPosition === 'right' && (
-        <span className="flex items-center justify-center text-xl ml-1">{icon}</span>
+        <span className="flex items-center justify-center text-lg sm:text-xl ml-1">{icon}</span>
       )}
     </button>
   );

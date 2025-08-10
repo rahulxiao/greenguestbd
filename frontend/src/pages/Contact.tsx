@@ -2,300 +2,300 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-import { Mail, Phone, MapPin, Clock, MessageSquare, Send } from 'lucide-react';
-import { Header, Footer } from '../components';
-
-interface ContactForm {
-  name: string;
-  email: string;
-  subject: string;
-  message: string;
-}
+import { Header, Footer, Button, Card } from '../components';
+import { Mail, Phone, MapPin, Clock, Send, MessageCircle, HelpCircle, FileText, Shield } from 'lucide-react';
 
 const schema = yup.object({
   name: yup.string().required('Name is required'),
-  email: yup.string().email('Invalid email').required('Email is required'),
+  email: yup.string().email('Invalid email format').required('Email is required'),
   subject: yup.string().required('Subject is required'),
-  message: yup.string().required('Message is required').min(10, 'Message must be at least 10 characters'),
+  message: yup.string().required('Message is required').min(10, 'Message must be at least 10 characters')
 }).required();
+
+type FormData = yup.InferType<typeof schema>;
 
 const Contact: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset,
-  } = useForm<ContactForm>({
-    resolver: yupResolver(schema),
+  const { register, handleSubmit, formState: { errors }, reset } = useForm<FormData>({
+    resolver: yupResolver(schema)
   });
 
-  const onSubmit = async (data: ContactForm) => {
+  const onSubmit = async (data: FormData) => {
     setIsSubmitting(true);
-    
     // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
+    await new Promise(resolve => setTimeout(resolve, 1000));
     setIsSubmitting(false);
     setSubmitSuccess(true);
     reset();
-    
-    // Reset success message after 5 seconds
     setTimeout(() => setSubmitSuccess(false), 5000);
   };
+
+  const quickHelpItems = [
+    {
+      icon: MessageCircle,
+      title: "Live Chat",
+      description: "Get instant help from our support team",
+      action: "Start Chat",
+      href: "#"
+    },
+    {
+      icon: HelpCircle,
+      title: "FAQ",
+      description: "Find answers to common questions",
+      action: "Browse FAQ",
+      href: "#"
+    },
+    {
+      icon: FileText,
+      title: "Help Center",
+      description: "Comprehensive guides and tutorials",
+      action: "Visit Center",
+      href: "#"
+    },
+    {
+      icon: Shield,
+      title: "Returns",
+      description: "Learn about our return policy",
+      action: "View Policy",
+      href: "#"
+    }
+  ];
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
       
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Header */}
-        <div className="text-center mb-16">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Contact Us</h1>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Have questions about bonsai care or need help with your order? We're here to help!
-            Our team of bonsai experts is ready to assist you.
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
+        {/* Page Header */}
+        <div className="text-center mb-8 sm:mb-12">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+            Get in Touch
+          </h1>
+          <p className="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto">
+            Have questions about our bonsai collection? Need help with your order? 
+            We're here to help you cultivate your passion for bonsai.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          {/* Contact Form */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Send us a Message</h2>
-            
-            {submitSuccess && (
-              <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-md">
-                <p className="text-green-800">
-                  Thank you for your message! We'll get back to you within 24 hours.
-                </p>
-              </div>
-            )}
-            
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Full Name
-                </label>
-                <input
-                  type="text"
-                  {...register('name')}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                  placeholder="Your full name"
-                />
-                {errors.name && (
-                  <p className="text-red-600 text-sm mt-1">{errors.name.message}</p>
-                )}
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Email Address
-                </label>
-                <input
-                  type="email"
-                  {...register('email')}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                  placeholder="your.email@example.com"
-                />
-                {errors.email && (
-                  <p className="text-red-600 text-sm mt-1">{errors.email.message}</p>
-                )}
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Subject
-                </label>
-                <select
-                  {...register('subject')}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                >
-                  <option value="">Select a subject</option>
-                  <option value="general">General Inquiry</option>
-                  <option value="product">Product Question</option>
-                  <option value="care">Bonsai Care Advice</option>
-                  <option value="order">Order Status</option>
-                  <option value="return">Returns & Exchanges</option>
-                  <option value="technical">Technical Support</option>
-                </select>
-                {errors.subject && (
-                  <p className="text-red-600 text-sm mt-1">{errors.subject.message}</p>
-                )}
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Message
-                </label>
-                <textarea
-                  {...register('message')}
-                  rows={6}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                  placeholder="Tell us how we can help you..."
-                />
-                {errors.message && (
-                  <p className="text-red-600 text-sm mt-1">{errors.message.message}</p>
-                )}
-              </div>
-              
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full flex items-center justify-center px-6 py-3 bg-green-600 text-white rounded-md font-medium hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <Send className="h-4 w-4 mr-2" />
-                {isSubmitting ? 'Sending...' : 'Send Message'}
-              </button>
-            </form>
-          </div>
-
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
           {/* Contact Information */}
-          <div className="space-y-8">
-            {/* Contact Details */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Get in Touch</h2>
-              
-              <div className="space-y-6">
-                <div className="flex items-start space-x-4">
-                  <div className="flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
-                    <Mail className="h-6 w-6 text-green-600" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-medium text-gray-900">Email</h3>
-                    <p className="text-gray-600">support@bonsaimarket.com</p>
-                    <p className="text-gray-600">sales@bonsaimarket.com</p>
-                  </div>
-                </div>
+          <div className="lg:col-span-1 space-y-6">
+            <Card className="bg-white">
+              <div className="p-4 sm:p-6">
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6">Contact Information</h2>
                 
-                <div className="flex items-start space-x-4">
-                  <div className="flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
-                    <Phone className="h-6 w-6 text-green-600" />
+                <div className="space-y-4 sm:space-y-6">
+                  <div className="flex items-start space-x-3 sm:space-x-4">
+                    <div className="flex-shrink-0 w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                      <Mail className="h-5 w-5 text-green-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-800 text-sm sm:text-base">Email</h3>
+                      <p className="text-gray-600 text-sm sm:text-base">hello@bonsaimarket.com</p>
+                      <p className="text-gray-500 text-xs sm:text-sm">We'll respond within 24 hours</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-lg font-medium text-gray-900">Phone</h3>
-                    <p className="text-gray-600">+1 (555) 123-4567</p>
-                    <p className="text-gray-600">Mon-Fri: 9AM-6PM EST</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start space-x-4">
-                  <div className="flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
-                    <MapPin className="h-6 w-6 text-green-600" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-medium text-gray-900">Address</h3>
-                    <p className="text-gray-600">
-                      123 Bonsai Garden Way<br />
-                      Green Valley, CA 90210<br />
-                      United States
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start space-x-4">
-                  <div className="flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
-                    <Clock className="h-6 w-6 text-green-600" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-medium text-gray-900">Business Hours</h3>
-                    <p className="text-gray-600">Monday - Friday: 9:00 AM - 6:00 PM</p>
-                    <p className="text-gray-600">Saturday: 10:00 AM - 4:00 PM</p>
-                    <p className="text-gray-600">Sunday: Closed</p>
-                  </div>
-                </div>
-              </div>
-            </div>
 
-            {/* FAQ Quick Links */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Quick Help</h2>
-              
-              <div className="space-y-4">
-                <div className="border-b border-gray-200 pb-4">
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">Order Status</h3>
-                  <p className="text-gray-600 mb-3">
-                    Track your order and get real-time updates on shipping progress.
-                  </p>
-                  <button className="text-green-600 hover:text-green-700 font-medium">
-                    Track My Order →
-                  </button>
-                </div>
-                
-                <div className="border-b border-gray-200 pb-4">
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">Returns & Exchanges</h3>
-                  <p className="text-gray-600 mb-3">
-                    Learn about our 30-day return policy and how to process returns.
-                  </p>
-                  <button className="text-green-600 hover:text-green-700 font-medium">
-                    Return Policy →
-                  </button>
-                </div>
-                
-                <div className="border-b border-gray-200 pb-4">
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">Bonsai Care Guide</h3>
-                  <p className="text-gray-600 mb-3">
-                    Get expert tips and advice on caring for your bonsai trees.
-                  </p>
-                  <button className="text-green-600 hover:text-green-700 font-medium">
-                    Care Guide →
-                  </button>
-                </div>
-                
-                <div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">Live Chat</h3>
-                  <p className="text-gray-600 mb-3">
-                    Chat with our bonsai experts for immediate assistance.
-                  </p>
-                  <button className="flex items-center text-green-600 hover:text-green-700 font-medium">
-                    <MessageSquare className="h-4 w-4 mr-2" />
-                    Start Chat →
-                  </button>
+                  <div className="flex items-start space-x-3 sm:space-x-4">
+                    <div className="flex-shrink-0 w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                      <Phone className="h-5 w-5 text-green-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-800 text-sm sm:text-base">Phone</h3>
+                      <p className="text-gray-600 text-sm sm:text-base">+1 (555) 123-4567</p>
+                      <p className="text-gray-500 text-xs sm:text-sm">Mon-Fri 9AM-6PM EST</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start space-x-3 sm:space-x-4">
+                    <div className="flex-shrink-0 w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                      <MapPin className="h-5 w-5 text-green-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-800 text-sm sm:text-base">Address</h3>
+                      <p className="text-gray-600 text-sm sm:text-base">
+                        123 Bonsai Lane<br />
+                        Garden City, NY 10001<br />
+                        United States
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start space-x-3 sm:space-x-4">
+                    <div className="flex-shrink-0 w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                      <Clock className="h-5 w-5 text-green-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-800 text-sm sm:text-base">Business Hours</h3>
+                      <p className="text-gray-600 text-sm sm:text-base">
+                        Monday - Friday: 9:00 AM - 6:00 PM<br />
+                        Saturday: 10:00 AM - 4:00 PM<br />
+                        Sunday: Closed
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
+            </Card>
 
             {/* Social Media */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Follow Us</h2>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <button className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
-                  <span className="text-xl mr-2">📘</span>
-                  Facebook
-                </button>
-                <button className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
-                  <span className="text-xl mr-2">📷</span>
-                  Instagram
-                </button>
-                <button className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
-                  <span className="text-xl mr-2">🐦</span>
-                  Twitter
-                </button>
-                <button className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
-                  <span className="text-xl mr-2">📺</span>
-                  YouTube
-                </button>
+            <Card className="bg-white">
+              <div className="p-4 sm:p-6">
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-800 mb-4">Follow Us</h3>
+                <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                  <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors text-sm sm:text-base">
+                    Facebook
+                  </a>
+                  <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors text-sm sm:text-base">
+                    Instagram
+                  </a>
+                  <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors text-sm sm:text-base">
+                    Twitter
+                  </a>
+                  <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors text-sm sm:text-base">
+                    YouTube
+                  </a>
+                </div>
               </div>
-            </div>
+            </Card>
+          </div>
+
+          {/* Contact Form */}
+          <div className="lg:col-span-2">
+            <Card className="bg-white">
+              <div className="p-4 sm:p-6">
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6">Send us a Message</h2>
+                
+                {submitSuccess && (
+                  <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <p className="text-green-800 text-sm sm:text-base">
+                      Thank you for your message! We'll get back to you within 24 hours.
+                    </p>
+                  </div>
+                )}
+
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                    <div>
+                      <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                        Full Name *
+                      </label>
+                      <input
+                        id="name"
+                        type="text"
+                        {...register('name')}
+                        className={`w-full px-3 sm:px-4 py-2 sm:py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm sm:text-base ${
+                          errors.name ? 'border-red-300' : 'border-gray-300'
+                        }`}
+                        placeholder="Enter your full name"
+                      />
+                      {errors.name && (
+                        <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                        Email Address *
+                      </label>
+                      <input
+                        id="email"
+                        type="email"
+                        {...register('email')}
+                        className={`w-full px-3 sm:px-4 py-2 sm:py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm sm:text-base ${
+                          errors.email ? 'border-red-300' : 'border-gray-300'
+                        }`}
+                        placeholder="Enter your email"
+                      />
+                      {errors.email && (
+                        <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-2">
+                      Subject *
+                    </label>
+                    <input
+                      id="subject"
+                      type="text"
+                      {...register('subject')}
+                      className={`w-full px-3 sm:px-4 py-2 sm:py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm sm:text-base ${
+                        errors.subject ? 'border-red-300' : 'border-gray-300'
+                      }`}
+                      placeholder="What is this about?"
+                    />
+                    {errors.subject && (
+                      <p className="mt-1 text-sm text-red-600">{errors.subject.message}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
+                      Message *
+                    </label>
+                    <textarea
+                      id="message"
+                      rows={6}
+                      {...register('message')}
+                      className={`w-full px-3 sm:px-4 py-2 sm:py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm sm:text-base resize-none ${
+                        errors.message ? 'border-red-300' : 'border-gray-300'
+                      }`}
+                      placeholder="Tell us how we can help you..."
+                    />
+                    {errors.message && (
+                      <p className="mt-1 text-sm text-red-600">{errors.message.message}</p>
+                    )}
+                  </div>
+
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    fullWidth
+                    loading={isSubmitting}
+                    disabled={isSubmitting}
+                  >
+                    <Send className="h-4 w-4 mr-2" />
+                    {isSubmitting ? 'Sending...' : 'Send Message'}
+                  </Button>
+                </form>
+              </div>
+            </Card>
           </div>
         </div>
 
-        {/* Map Section */}
-        <div className="mt-16">
-          <h2 className="text-3xl font-bold text-gray-900 text-center mb-8">Visit Our Nursery</h2>
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-            <div className="aspect-w-16 aspect-h-9 rounded-lg overflow-hidden bg-gray-200">
-              <div className="flex items-center justify-center h-64 bg-gray-200">
-                <p className="text-gray-500">Interactive Map Coming Soon</p>
-              </div>
-            </div>
-            <div className="mt-4 text-center">
-              <p className="text-gray-600">
-                Come visit our beautiful bonsai nursery and see our collection in person!
-              </p>
-            </div>
+        {/* Quick Help Section */}
+        <div className="mt-12 sm:mt-16">
+          <div className="text-center mb-8 sm:mb-12">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
+              Quick Help & Resources
+            </h2>
+            <p className="text-gray-600 text-lg">
+              Get answers to common questions and find helpful resources
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            {quickHelpItems.map((item, index) => {
+              const IconComponent = item.icon;
+              return (
+                <Card key={index} className="bg-white hover:shadow-lg transition-shadow cursor-pointer">
+                  <div className="p-4 sm:p-6 text-center">
+                    <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                      <IconComponent className="h-6 w-6 text-green-600" />
+                    </div>
+                    <h3 className="font-semibold text-gray-800 mb-2 text-sm sm:text-base">{item.title}</h3>
+                    <p className="text-gray-600 mb-4 text-xs sm:text-sm">{item.description}</p>
+                    <Button variant="secondary" size="small" className="w-full">
+                      {item.action}
+                    </Button>
+                  </div>
+                </Card>
+              );
+            })}
           </div>
         </div>
       </div>

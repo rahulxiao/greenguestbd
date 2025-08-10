@@ -41,18 +41,18 @@ const Card: React.FC<CardProps> = ({
   const getSizeClasses = () => {
     switch (size) {
       case 'small':
-        return 'max-w-[280px]';
+        return 'max-w-[280px] w-full';
       case 'medium':
-        return 'max-w-[400px]';
+        return 'max-w-[400px] w-full';
       case 'large':
-        return 'max-w-[600px]';
+        return 'max-w-[600px] w-full';
       default:
-        return 'max-w-[400px]';
+        return 'max-w-[400px] w-full';
     }
   };
 
   const cardClasses = [
-    'rounded-2xl overflow-hidden transition-all duration-500 ease-out font-sans relative',
+    'rounded-xl sm:rounded-2xl overflow-hidden transition-all duration-500 ease-out font-sans relative',
     getVariantClasses(),
     getSizeClasses(),
     onClick ? 'cursor-pointer' : '',
@@ -67,7 +67,7 @@ const Card: React.FC<CardProps> = ({
       )}
       
       {image && (
-        <div className="w-full h-48 overflow-hidden relative">
+        <div className="w-full h-32 sm:h-40 md:h-48 overflow-hidden relative">
           <img 
             src={image} 
             alt={imageAlt || title || 'Card image'} 
@@ -80,9 +80,9 @@ const Card: React.FC<CardProps> = ({
         </div>
       )}
       
-      <div className="p-6 relative z-10">
+      <div className="p-4 sm:p-6 relative z-10">
         {title && (
-          <h3 className={`text-xl font-bold mb-2 leading-tight ${
+          <h3 className={`text-lg sm:text-xl font-bold mb-2 leading-tight ${
             variant === 'product' 
               ? 'text-green-800 hover:text-green-700 transition-colors duration-300' 
               : 'text-green-800'
@@ -92,10 +92,10 @@ const Card: React.FC<CardProps> = ({
         )}
         
         {subtitle && (
-          <p className="text-sm text-gray-600 font-medium mb-4">{subtitle}</p>
+          <p className="text-sm text-gray-600 font-medium mb-3 sm:mb-4">{subtitle}</p>
         )}
         
-        <div className={`leading-relaxed ${
+        <div className={`leading-relaxed text-sm sm:text-base ${
           variant === 'product' ? 'text-green-700' : 'text-gray-700'
         }`}>
           {children}
