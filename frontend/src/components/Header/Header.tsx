@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, Menu, X, ShoppingCart, Heart } from 'lucide-react';
+import { Search, Menu, X, ShoppingCart, Heart, Wifi, User, LogOut, Package, Settings, ChevronDown } from 'lucide-react';
+import ConnectionTestService from '../../services/connection-test';
+import { authService } from '../../services/auth.service';
 
 interface HeaderProps {
   title?: string;
@@ -17,6 +19,46 @@ const Header: React.FC<HeaderProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Check authentication status on component mount
+  useEffect(() => {
+    const checkAuth = () => {
+      try {
+        const token = localStorage.getItem('authToken');
+        const userData = localStorage.getItem('user');
+        
+        if (token && userData) {
+          setUser(JSON.parse(userData));
+        }
+      } catch (error) {
+        console.error('Error checking auth:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkAuth();
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await authService.logout();
+      setUser(null);
+      setIsUserMenuOpen(false);
+      navigate('/');
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Force logout even if API call fails
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('user');
+      setUser(null);
+      setIsUserMenuOpen(false);
+      navigate('/');
+    }
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,6 +87,14 @@ const Header: React.FC<HeaderProps> = ({
 
   const closeMobileMenu = () => {
     setIsMobileMenuOpen(false);
+  };
+
+  const toggleUserMenu = () => {
+    setIsUserMenuOpen(!isUserMenuOpen);
+  };
+
+  const closeUserMenu = () => {
+    setIsUserMenuOpen(false);
   };
 
   return (
@@ -85,6 +135,21 @@ const Header: React.FC<HeaderProps> = ({
           
           {/* Right Side Actions */}
           <div className="flex items-center gap-2 sm:gap-4">
+            {/* Connection Test Button (Development Only) */}
+            {process.env.NODE_ENV === 'development' && (
+              <button
+                onClick={async () => {
+                  console.log('🔍 Testing backend connection...');
+                  await ConnectionTestService.runFullConnectionTest();
+                }}
+                className="hidden lg:flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg transition-colors duration-300 text-sm"
+                title="Test Backend Connection"
+              >
+                <Wifi className="h-4 w-4" />
+                Test API
+              </button>
+            )}
+            
             {/* Desktop Navigation Links */}
             <div className="hidden lg:flex items-center gap-6">
               <Link to="/about" className="text-green-700 hover:text-green-800 transition-colors font-medium hover:scale-105">
@@ -103,9 +168,69 @@ const Header: React.FC<HeaderProps> = ({
               <Search className="h-5 w-5" />
             </button>
             
-            <Link to="/login" className="hidden sm:block text-green-700 hover:text-green-800 transition-colors font-medium hover:scale-105">
-              Sign In
-            </Link>
+            {/* User Authentication Section */}
+            {!loading && (
+              <>
+                {user ? (
+                  // User is logged in - show user menu
+                  <div className="relative">
+                    <button
+                      onClick={toggleUserMenu}
+                      className="hidden sm:flex items-center gap-2 text-green-700 hover:text-green-800 transition-colors font-medium hover:scale-105 bg-green-100 px-3 py-2 rounded-lg"
+                    >
+                      <User className="h-4 w-4" />
+                      <span className="max-w-24 truncate">
+                        {user.firstName ? `${user.firstName} ${user.lastName}` : user.name || 'User'}
+                      </span>
+                      <ChevronDown className={`h-4 w-4 transition-transform ${isUserMenuOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                    
+                    {/* User Dropdown Menu */}
+                    {isUserMenuOpen && (
+                      <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg border border-green-200 py-2 z-50">
+                        <Link
+                          to="/profile"
+                          className="flex items-center gap-3 px-4 py-2 text-green-700 hover:bg-green-50 transition-colors"
+                          onClick={closeUserMenu}
+                        >
+                          <User className="h-4 w-4" />
+                          Profile
+                        </Link>
+                        <Link
+                          to="/orders"
+                          className="flex items-center gap-3 px-4 py-2 text-green-700 hover:bg-green-50 transition-colors"
+                          onClick={closeUserMenu}
+                        >
+                          <Package className="h-4 w-4" />
+                          Orders
+                        </Link>
+                        <Link
+                          to="/wishlist"
+                          className="flex items-center gap-3 px-4 py-2 text-green-700 hover:bg-green-50 transition-colors"
+                          onClick={closeUserMenu}
+                        >
+                          <Heart className="h-4 w-4" />
+                          Wishlist
+                        </Link>
+                        <hr className="my-2 border-green-200" />
+                        <button
+                          onClick={handleLogout}
+                          className="flex items-center gap-3 px-4 py-2 text-red-600 hover:bg-red-50 transition-colors w-full text-left"
+                        >
+                          <LogOut className="h-4 w-4" />
+                          Logout
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  // User is not logged in - show sign in button
+                  <Link to="/login" className="hidden sm:block text-green-700 hover:text-green-800 transition-colors font-medium hover:scale-105">
+                    Sign In
+                  </Link>
+                )}
+              </>
+            )}
             
             <Link to="/wishlist" className="relative text-green-700 hover:text-green-800 transition-colors">
               <div className="bg-gradient-to-br from-green-100 to-emerald-200 p-2 rounded-full shadow-sm">
@@ -182,20 +307,41 @@ const Header: React.FC<HeaderProps> = ({
             >
               Contact
             </Link>
-            <Link 
-              to="/login" 
-              className="block text-green-700 hover:text-green-800 transition-colors font-medium py-2"
-              onClick={closeMobileMenu}
-            >
-              Sign In
-            </Link>
-            <Link 
-              to="/orders" 
-              className="block text-green-700 hover:text-green-800 transition-colors font-medium py-2"
-              onClick={closeMobileMenu}
-            >
-              Orders
-            </Link>
+            {user ? (
+              <>
+                <Link 
+                  to="/profile" 
+                  className="block text-green-700 hover:text-green-800 transition-colors font-medium py-2"
+                  onClick={closeMobileMenu}
+                >
+                  Profile
+                </Link>
+                <Link 
+                  to="/orders" 
+                  className="block text-green-700 hover:text-green-800 transition-colors font-medium py-2"
+                  onClick={closeMobileMenu}
+                >
+                  Orders
+                </Link>
+                <button 
+                  onClick={() => {
+                    handleLogout();
+                    closeMobileMenu();
+                  }}
+                  className="block text-red-600 hover:text-red-700 transition-colors font-medium py-2 w-full text-left"
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <Link 
+                to="/login" 
+                className="block text-green-700 hover:text-green-800 transition-colors font-medium py-2"
+                onClick={closeMobileMenu}
+              >
+                Sign In
+              </Link>
+            )}
             <Link 
               to="/search" 
               className="block text-green-700 hover:text-green-800 transition-colors font-medium py-2"
@@ -236,6 +382,14 @@ const Header: React.FC<HeaderProps> = ({
             </div>
           </div>
         </div>
+      )}
+
+      {/* Click outside to close user menu */}
+      {isUserMenuOpen && (
+        <div 
+          className="fixed inset-0 z-40" 
+          onClick={closeUserMenu}
+        />
       )}
     </header>
   );

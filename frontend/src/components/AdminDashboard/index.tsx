@@ -45,11 +45,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ stats, isLoading = fals
     },
     {
       title: 'Total Revenue',
-      value: `$${stats.totalRevenue.toLocaleString()}`,
+      value: `৳${stats.totalRevenue.toLocaleString()}`,
       icon: DollarSign,
-      color: 'bg-yellow-500',
-      textColor: 'text-yellow-600',
-      bgColor: 'bg-yellow-50'
+      color: 'bg-green-100',
+      textColor: 'text-green-600'
     }
   ];
 

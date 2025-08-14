@@ -1,26 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { Card, Button, Header, Footer } from '../components';
-import { Search as SearchIcon, Filter, Grid, List, Star, ShoppingCart, Heart, ChevronDown, ChevronUp, X } from 'lucide-react';
-
-interface Product {
-  id: number;
-  name: string;
-  price: number;
-  originalPrice?: number;
-  image: string;
-  category: string;
-  rating: number;
-  reviewCount: number;
-  inStock: boolean;
-  isNew?: boolean;
-  isSale?: boolean;
-}
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { Header, Footer, Card, Button } from '../components';
+import { Search as SearchIcon, Filter, ChevronDown, ChevronUp, Grid, List, ShoppingCart, Heart, Star } from 'lucide-react';
+import { productService, Product } from '../services/product.service';
+import { formatCurrency } from '../utils/price';
 
 const Search: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [sortBy, setSortBy] = useState('relevance');
   const [priceRange, setPriceRange] = useState([0, 1000]);
@@ -31,115 +20,70 @@ const Search: React.FC = () => {
 
   const query = searchParams.get('q') || '';
 
-  // Mock products data
-  const mockProducts: Product[] = [
-    {
-      id: 1,
-      name: "Premium Juniper Bonsai Tree",
-      price: 189.99,
-      originalPrice: 249.99,
-      image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400",
-      category: "Trees",
-      rating: 4.8,
-      reviewCount: 127,
-      inStock: true,
-      isSale: true
-    },
-    {
-      id: 2,
-      name: "Japanese Maple Bonsai",
-      price: 299.99,
-      image: "https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400",
-      category: "Trees",
-      rating: 4.9,
-      reviewCount: 89,
-      inStock: true,
-      isNew: true
-    },
-    {
-      id: 3,
-      name: "Ceramic Bonsai Pot - Traditional",
-      price: 34.99,
-      image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400",
-      category: "Pots",
-      rating: 4.6,
-      reviewCount: 203,
-      inStock: true
-    },
-    {
-      id: 4,
-      name: "Bonsai Pruning Shears",
-      price: 24.99,
-      image: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=400",
-      category: "Tools",
-      rating: 4.7,
-      reviewCount: 156,
-      inStock: true
-    },
-    {
-      id: 5,
-      name: "Organic Bonsai Soil Mix",
-      price: 19.99,
-      image: "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400",
-      category: "Soil & Fertilizer",
-      rating: 4.5,
-      reviewCount: 98,
-      inStock: true
-    },
-    {
-      id: 6,
-      name: "Bonsai Watering Can",
-      price: 39.99,
-      image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400",
-      category: "Tools",
-      rating: 4.4,
-      reviewCount: 67,
-      inStock: false
-    }
-  ];
-
-  const categories = ['Trees', 'Pots', 'Tools', 'Soil & Fertilizer', 'Books & Guides'];
+  const categories = ['Bonsai Trees', 'Pots & Containers', 'Tools & Equipment', 'Soil & Fertilizers', 'Books & Guides'];
   const ratings = [5, 4, 3, 2, 1];
 
-  useEffect(() => {
-    // Simulate API call
-    const fetchProducts = async () => {
-      setLoading(true);
-      await new Promise(resolve => setTimeout(resolve, 800));
+  const fetchProducts = async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      let fetchedProducts: Product[];
       
-      let filteredProducts = mockProducts.filter(product => {
-        const matchesQuery = product.name.toLowerCase().includes(query.toLowerCase()) ||
-                           product.category.toLowerCase().includes(query.toLowerCase());
-        const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(product.category);
-        const matchesRating = selectedRatings.length === 0 || selectedRatings.includes(Math.floor(product.rating));
-        const matchesPrice = product.price >= priceRange[0] && product.price <= priceRange[1];
-        
-        return matchesQuery && matchesCategory && matchesRating && matchesPrice;
-      });
-
-      // Sort products
-      switch (sortBy) {
-        case 'price-low':
-          filteredProducts.sort((a, b) => a.price - b.price);
-          break;
-        case 'price-high':
-          filteredProducts.sort((a, b) => b.price - a.price);
-          break;
-        case 'rating':
-          filteredProducts.sort((a, b) => b.rating - a.rating);
-          break;
-        case 'newest':
-          filteredProducts.sort((a, b) => (b.isNew ? 1 : 0) - (a.isNew ? 1 : 0));
-          break;
-        default:
-          // relevance - keep original order
-          break;
+      if (query.trim()) {
+        // Search by name if query exists
+        fetchedProducts = await productService.getProductsByName(query);
+      } else {
+        // Get all products and apply filters
+        fetchedProducts = await productService.getAllProducts();
       }
 
-      setProducts(filteredProducts);
-      setLoading(false);
-    };
+      // Apply client-side filtering
+      let filteredProducts = fetchedProducts.filter(product => {
+        // Category filter
+        if (selectedCategories.length > 0 && !selectedCategories.includes(product.category)) {
+          return false;
+        }
+        
+        // Price filter
+        if (product.price < priceRange[0] || product.price > priceRange[1]) {
+          return false;
+        }
+        
+        // Rating filter
+        if (selectedRatings.length > 0 && !selectedRatings.some(rating => product.rating >= rating)) {
+          return false;
+        }
+        
+        return true;
+      });
 
+      // Apply sorting
+      filteredProducts.sort((a, b) => {
+        switch (sortBy) {
+          case 'price-low':
+            return a.price - b.price;
+          case 'price-high':
+            return b.price - a.price;
+          case 'rating':
+            return b.rating - a.rating;
+          case 'newest':
+            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+          default:
+            return 0;
+        }
+      });
+
+      setProducts(filteredProducts);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch products');
+      setProducts([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchProducts();
   }, [query, sortBy, priceRange, selectedCategories, selectedRatings]);
 
@@ -204,6 +148,27 @@ const Search: React.FC = () => {
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-3 sm:py-4 lg:py-8">
+          <div className="text-center py-8 sm:py-12">
+            <div className="text-red-400 mb-4">
+              <SearchIcon className="h-12 w-12 sm:h-16 sm:w-16 mx-auto" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Error loading products</h3>
+            <p className="text-gray-600 text-sm sm:text-base mb-4">{error}</p>
+            <Button variant="primary" onClick={fetchProducts}>
+              Try Again
+            </Button>
           </div>
         </div>
         <Footer />
@@ -412,23 +377,18 @@ const Search: React.FC = () => {
                     <div className={viewMode === 'list' ? 'flex flex-col sm:flex-row' : ''}>
                       <div className={`relative ${viewMode === 'list' ? 'sm:w-48' : ''}`}>
                         <img
-                          src={product.image}
+                          src={product.imageUrl || '/placeholder-product.jpg'}
                           alt={product.name}
                           className={`w-full object-cover rounded-lg ${
                             viewMode === 'list' ? 'h-32 sm:h-48' : 'h-40 sm:h-48 lg:h-56'
                           }`}
                         />
-                        {product.isNew && (
+                        {product.createdAt && new Date(product.createdAt).getTime() > Date.now() - 7 * 24 * 60 * 60 * 1000 && (
                           <span className="absolute top-2 left-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
                             New
                           </span>
                         )}
-                        {product.isSale && (
-                          <span className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full">
-                            Sale
-                          </span>
-                        )}
-                        {!product.inStock && (
+                        {!product.available && (
                           <div className="absolute inset-0 bg-black bg-opacity-50 rounded-lg flex items-center justify-center">
                             <span className="text-white font-medium text-sm">Out of Stock</span>
                           </div>
@@ -455,13 +415,8 @@ const Search: React.FC = () => {
                         
                         <div className="flex items-center mb-3 sm:mb-4">
                           <span className="text-lg sm:text-xl font-bold text-green-600">
-                            ${product.price.toFixed(2)}
+                            {formatCurrency(product.price)}
                           </span>
-                          {product.originalPrice && (
-                            <span className="text-sm text-gray-500 line-through ml-2">
-                              ${product.originalPrice.toFixed(2)}
-                            </span>
-                          )}
                         </div>
                         
                         <div className="flex flex-col space-y-2">
@@ -469,10 +424,10 @@ const Search: React.FC = () => {
                             variant="primary" 
                             size="small" 
                             className="w-full"
-                            disabled={!product.inStock}
+                            disabled={!product.available}
                           >
                             <ShoppingCart className="h-4 w-4 mr-1" />
-                            {product.inStock ? 'Add to Cart' : 'Out of Stock'}
+                            {product.available ? 'Add to Cart' : 'Out of Stock'}
                           </Button>
                           <Button 
                             variant="secondary" 

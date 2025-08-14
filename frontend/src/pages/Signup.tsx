@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { Button, Input } from '../components';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { authService, RegisterData } from '../services/auth.service';
 
 const Signup: React.FC = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -13,29 +15,133 @@ const Signup: React.FC = () => {
     agreeToTerms: false
   });
 
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
+    
+    // Clear error when user starts typing
+    if (error) setError(null);
   };
 
-  const handleSignup = (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  const validateForm = (): boolean => {
+    // Clear previous errors
+    setError(null);
+
+    // Required field validation
+    if (!formData.firstName.trim()) {
+      setError('First name is required');
+      return false;
+    }
+
+    if (!formData.lastName.trim()) {
+      setError('Last name is required');
+      return false;
+    }
+
+    if (!formData.email.trim()) {
+      setError('Email is required');
+      return false;
+    }
+
+    if (!formData.phoneNumber.trim()) {
+      setError('Phone number is required');
+      return false;
+    }
+
+    if (!formData.password) {
+      setError('Password is required');
+      return false;
+    }
+
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters long');
+      return false;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      return false;
+    }
+
+    if (!formData.agreeToTerms) {
+      setError('You must agree to the Terms of Service and Privacy Policy');
+      return false;
+    }
+
     // Phone number validation
     const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
     if (!phoneRegex.test(formData.phoneNumber.replace(/\s/g, ''))) {
-      alert('Please enter a valid phone number!');
-      return;
+      setError('Please enter a valid phone number');
+      return false;
     }
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      setError('Please enter a valid email address');
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleSignup = async (e: React.FormEvent) => {
+    e.preventDefault();
     
-    if (formData.password !== formData.confirmPassword) {
-      alert('Passwords do not match!');
+    if (!validateForm()) {
       return;
     }
-    alert('Signup functionality would be implemented here!');
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      const signupData: RegisterData = {
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        email: formData.email.trim().toLowerCase(),
+        password: formData.password,
+        confirmPassword: formData.confirmPassword,
+        phoneNumber: formData.phoneNumber.trim()
+      };
+
+      const response = await authService.register(signupData);
+      
+      if (response.success) {
+        setSuccess('Account created successfully! Redirecting to login...');
+        
+        // Clear form
+        setFormData({
+          firstName: '',
+          lastName: '',
+          email: '',
+          phoneNumber: '',
+          password: '',
+          confirmPassword: '',
+          agreeToTerms: false
+        });
+
+        // Redirect to login after 2 seconds
+        setTimeout(() => {
+          navigate('/login');
+        }, 2000);
+      } else {
+        setError(response.message || 'Registration failed. Please try again.');
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Registration failed. Please try again.';
+      setError(errorMessage);
+      console.error('Signup error:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -71,6 +177,26 @@ const Signup: React.FC = () => {
             <p className="text-green-600">Create your account and start your bonsai journey</p>
           </div>
 
+          {/* Success Message */}
+          {success && (
+            <div className="mb-6 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg">
+              <div className="flex items-center">
+                <span className="text-green-500 mr-2">✅</span>
+                {success}
+              </div>
+            </div>
+          )}
+
+          {/* Error Message */}
+          {error && (
+            <div className="mb-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg">
+              <div className="flex items-center">
+                <span className="text-red-500 mr-2">⚠️</span>
+                {error}
+              </div>
+            </div>
+          )}
+
           {/* Signup Form */}
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-xl border border-green-200">
             <form onSubmit={handleSignup} className="space-y-6">
@@ -86,6 +212,7 @@ const Signup: React.FC = () => {
                   required
                   fullWidth
                   icon="👤"
+                  disabled={loading}
                 />
                 <Input
                   label="Last Name"
@@ -97,6 +224,7 @@ const Signup: React.FC = () => {
                   required
                   fullWidth
                   icon="👤"
+                  disabled={loading}
                 />
               </div>
 
@@ -110,6 +238,7 @@ const Signup: React.FC = () => {
                 required
                 fullWidth
                 icon="📧"
+                disabled={loading}
               />
 
               <Input
@@ -122,18 +251,20 @@ const Signup: React.FC = () => {
                 required
                 fullWidth
                 icon="📱"
+                disabled={loading}
               />
 
               <Input
                 label="Password"
                 type="password"
                 name="password"
-                placeholder="Create a password"
+                placeholder="Create a password (min. 6 characters)"
                 value={formData.password}
                 onChange={handleInputChange}
                 required
                 fullWidth
                 icon="🔒"
+                disabled={loading}
               />
 
               <Input
@@ -146,6 +277,7 @@ const Signup: React.FC = () => {
                 required
                 fullWidth
                 icon="🔒"
+                disabled={loading}
               />
 
               {/* Terms and Conditions */}
@@ -157,6 +289,7 @@ const Signup: React.FC = () => {
                   onChange={handleInputChange}
                   className="w-4 h-4 text-green-600 border-green-300 rounded focus:ring-green-500 mt-1"
                   required
+                  disabled={loading}
                 />
                 <label className="ml-2 text-sm text-green-700">
                   I agree to the{' '}
@@ -175,9 +308,17 @@ const Signup: React.FC = () => {
                 variant="primary"
                 size="large"
                 fullWidth
-                className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+                disabled={loading}
+                className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                🌱 Create Account
+                {loading ? (
+                  <div className="flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                    Creating Account...
+                  </div>
+                ) : (
+                  '🌱 Create Account'
+                )}
               </Button>
             </form>
 

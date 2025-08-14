@@ -9,34 +9,34 @@ export class User {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ name: 'first_name' })
   firstName: string;
 
-  @Column()
+  @Column({ name: 'last_name' })
   lastName: string;
 
-  @Column({ unique: true })
+  @Column({ unique: true, name: 'user_email' })
   email: string;
 
-  @Column()
+  @Column({ name: 'user_password' })
   password: string;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, name: 'phone_number' })
   phoneNumber: string;
 
-  @Column({ default: true })
+  @Column({ default: true, name: 'is_active' })
   isActive: boolean;
 
-  @Column({ default: false })
+  @Column({ default: false, name: 'is_email_verified' })
   isEmailVerified: boolean;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, name: 'email_verification_token' })
   emailVerificationToken: string;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, name: 'password_reset_token' })
   passwordResetToken: string;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, name: 'password_reset_expires' })
   passwordResetExpires: Date;
 
   @OneToMany(() => Order, order => order.user)
@@ -51,10 +51,10 @@ export class User {
   @OneToOne(() => Profile, profile => profile.user)
   profile: Profile;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ name: 'created_date' })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ name: 'updated_date' })
   updatedAt: Date;
 
   // Virtual property for full name

@@ -106,19 +106,16 @@ const WishlistItem: React.FC<WishlistItemProps> = ({
               
               {/* Price Info */}
               <div className="flex items-center space-x-2 mb-3">
-                <span className="text-lg font-bold text-green-600">
-                  ${price.toFixed(2)}
-                </span>
-                {originalPrice && (
-                  <>
-                    <span className="text-sm text-gray-500 line-through">
-                      ${originalPrice.toFixed(2)}
-                    </span>
-                    <span className="text-xs bg-red-100 text-red-600 px-2 py-1 rounded-full">
-                      {getDiscountPercentage()}% OFF
-                    </span>
-                  </>
-                )}
+                <div className="text-right">
+                  <p className="text-lg font-semibold text-green-600">
+                    ৳{price.toFixed(2)}
+                  </p>
+                  {originalPrice && (
+                    <p className="text-sm text-gray-500 line-through">
+                      ৳{originalPrice.toFixed(2)}
+                    </p>
+                  )}
+                </div>
               </div>
 
               {/* Stock Status */}

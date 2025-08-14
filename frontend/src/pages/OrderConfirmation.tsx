@@ -107,9 +107,11 @@ const OrderConfirmation: React.FC = () => {
                   <div className="ml-4 flex-1">
                     <h3 className="text-sm font-medium text-gray-900">{item.name}</h3>
                     <p className="text-sm text-gray-600">Qty: {item.quantity}</p>
-                    <p className="text-sm font-medium text-gray-900">
-                      ${(item.price * item.quantity).toFixed(2)}
-                    </p>
+                    <div className="text-right">
+                          <p className="text-sm text-gray-600">
+                            ৳{(item.price * item.quantity).toFixed(2)}
+                          </p>
+                        </div>
                   </div>
                 </div>
               ))}
@@ -118,7 +120,10 @@ const OrderConfirmation: React.FC = () => {
             <div className="border-t border-gray-200 mt-4 pt-4">
               <div className="flex justify-between text-lg font-semibold text-gray-900">
                 <span>Total</span>
-                <span>${finalTotal.toFixed(2)}</span>
+                <div className="text-center">
+                      <p className="text-sm text-gray-600">Final Total:</p>
+                      <p className="text-3xl font-bold text-green-600">৳{finalTotal.toFixed(2)}</p>
+                    </div>
               </div>
             </div>
           </div>

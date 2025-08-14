@@ -260,11 +260,11 @@ const ProductDetails: React.FC = () => {
             {/* Price */}
             <div className="flex items-center space-x-3">
               <span className="text-3xl sm:text-4xl font-bold text-green-600">
-                ${product.price.toFixed(2)}
+                ৳{product.price.toFixed(2)}
               </span>
               {product.originalPrice && (
                 <span className="text-xl text-gray-500 line-through">
-                  ${product.originalPrice.toFixed(2)}
+                  ৳{product.originalPrice.toFixed(2)}
                 </span>
               )}
             </div>

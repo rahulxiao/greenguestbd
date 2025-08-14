@@ -16,10 +16,41 @@ import Search from './pages/Search';
 import Orders from './pages/Orders';
 import About from './pages/About';
 import Contact from './pages/Contact';
+import { productService, Product } from './services/product.service';
+import { formatCurrency } from './utils/price';
+import { getProductImage, handleImageError } from './utils/image';
 
 function HomePage() {
   const navigate = useNavigate();
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [popularProducts, setPopularProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch products from backend
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setLoading(true);
+        const allProducts = await productService.getAllProducts();
+        setProducts(allProducts);
+        
+        // Get popular products (top rated or most reviewed)
+        const popular = allProducts
+          .sort((a, b) => (b.rating || 0) - (a.rating || 0))
+          .slice(0, 4);
+        setPopularProducts(popular);
+      } catch (err) {
+        setError('Failed to load products');
+        console.error('Error fetching products:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
 
   const handleGetStarted = () => {
     navigate('/search');
@@ -33,9 +64,14 @@ function HomePage() {
     alert('Mobile menu clicked!');
   };
 
-  const handleAddToCart = (productName: string) => {
-    alert(`${productName} added to cart!`);
-    navigate('/cart');
+  const handleAddToCart = async (product: Product) => {
+    try {
+      // TODO: Implement add to cart functionality
+      alert(`${product.name} added to cart!`);
+      navigate('/cart');
+    } catch (err) {
+      alert('Failed to add to cart');
+    }
   };
 
   const handleProductClick = (productId: number) => {
@@ -64,112 +100,14 @@ function HomePage() {
 
   // Auto-scroll carousel
   useEffect(() => {
+    if (popularProducts.length === 0) return;
+    
     const interval = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % popularProducts.length);
     }, 3000); // Change slide every 3 seconds
 
     return () => clearInterval(interval);
-  }, []);
-
-  // Mock product data
-  const products = [
-    {
-      id: 1,
-      name: "Premium Juniper Bonsai",
-      description: "A stunning 5-year-old Juniper bonsai with intricate branch structure",
-      price: "$189.99",
-      rating: 4.8,
-      reviews: 127
-    },
-    {
-      id: 2,
-      name: "Japanese Maple Bonsai",
-      description: "Beautiful red-leaved maple perfect for autumn display",
-      price: "$249.99",
-      rating: 4.9,
-      reviews: 89
-    },
-    {
-      id: 3,
-      name: "Beginner Bonsai Kit",
-      description: "Complete starter kit with tools and care guide",
-      price: "$89.99",
-      rating: 4.7,
-      reviews: 234
-    },
-    {
-      id: 4,
-      name: "Ficus Bonsai Tree",
-      description: "Indoor-friendly ficus with glossy green leaves",
-      price: "$159.99",
-      rating: 4.6,
-      reviews: 156
-    },
-    {
-      id: 5,
-      name: "Pine Bonsai Collection",
-      description: "Set of 3 miniature pine trees in decorative pots",
-      price: "$299.99",
-      rating: 4.9,
-      reviews: 67
-    },
-    {
-      id: 6,
-      name: "Bonsai Pruning Shears",
-      description: "Professional-grade stainless steel shears",
-      price: "$45.99",
-      rating: 4.8,
-      reviews: 189
-    },
-    {
-      id: 7,
-      name: "Ceramic Bonsai Pot",
-      description: "Handcrafted ceramic pot with drainage holes",
-      price: "$34.99",
-      rating: 4.7,
-      reviews: 98
-    },
-    {
-      id: 8,
-      name: "Bonsai Care Guide",
-      description: "Comprehensive care manual with seasonal tips",
-      price: "$19.99",
-      rating: 4.9,
-      reviews: 312
-    }
-  ];
-
-  // Most popular products for the slider
-  const popularProducts = [
-    {
-      id: 1,
-      name: "Premium Juniper Bonsai",
-      price: "$189.99",
-      image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600",
-      rating: 4.8
-    },
-    {
-      id: 2,
-      name: "Japanese Maple Bonsai",
-      price: "$249.99",
-      image: "https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=600",
-      rating: 4.9
-    },
-    {
-      id: 3,
-      name: "Ficus Bonsai Tree",
-      price: "$159.99",
-      image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=600",
-      rating: 4.6
-    },
-    {
-      id: 4,
-      name: "Pine Bonsai Collection",
-      price: "$299.99",
-      image: "https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=600",
-      rating: 4.9
-    }
-  ];
+  }, [popularProducts.length]);
 
   const categories = [
     {
@@ -205,6 +143,31 @@ function HomePage() {
     }
     return stars;
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-green-600 mx-auto mb-4"></div>
+          <p className="text-green-600 text-lg">Loading amazing products...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-600 text-6xl mb-4">⚠️</div>
+          <p className="text-red-600 text-lg mb-4">{error}</p>
+          <Button onClick={() => window.location.reload()} variant="primary">
+            Try Again
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 relative overflow-hidden">
@@ -261,9 +224,10 @@ function HomePage() {
                         <div className="relative bg-gradient-to-br from-white/30 to-white/10 rounded-xl h-56 mb-6 overflow-hidden group">
                           <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent"></div>
                           <img 
-                            src={product.image} 
+                            src={getProductImage(product.imageUrl)} 
                             alt={product.name}
                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                            onError={handleImageError}
                           />
                           {/* Floating Badge */}
                           <div className="absolute top-4 right-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white px-3 py-1 rounded-full text-sm font-semibold shadow-lg">
@@ -283,13 +247,13 @@ function HomePage() {
                           <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-2">
                               <div className="flex items-center">
-                                {renderStars(product.rating)}
+                                {renderStars(product.rating || 0)}
                               </div>
-                              <span className="text-green-200 font-medium">({product.rating})</span>
+                              <span className="text-green-200 font-medium">({product.rating || 0})</span>
                             </div>
                             <div className="text-right">
                               <span className="text-3xl font-bold bg-gradient-to-r from-green-300 to-emerald-300 bg-clip-text text-transparent drop-shadow-sm">
-                                {product.price}
+                                {formatCurrency(product.price)}
                               </span>
                             </div>
                           </div>
@@ -299,7 +263,7 @@ function HomePage() {
                             className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-green-500/25 mt-4"
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleProductClick(product.id);
+                              handleAddToCart(product);
                             }}
                           >
                             View Details →
@@ -334,100 +298,106 @@ function HomePage() {
           </div>
         </section>
 
-        {/* Product Section with Nature Theme */}
-        <section className="py-16 relative">
-          {/* Section Background */}
-          <div className="absolute inset-0 bg-gradient-to-b from-green-50/50 to-emerald-100/30"></div>
-          
+        {/* Featured Products Section */}
+        <section className="py-20 bg-white/50 backdrop-blur-sm">
           <div className="relative z-10 max-w-7xl mx-auto px-8">
             <div className="text-center mb-12">
-              <h2 className="text-4xl font-bold text-green-800 mb-4">🌳 Our Bonsai Collection</h2>
-              <p className="text-green-600 text-lg">Discover the art of miniature trees</p>
+              <h2 className="text-4xl font-bold text-green-800 mb-4">🌱 Featured Products</h2>
+              <p className="text-green-600 text-lg">Discover our handpicked selection of premium bonsai</p>
             </div>
             
-            <div className="flex justify-between items-center mb-8">
-              <h3 className="text-2xl font-bold text-green-800">Trees</h3>
-              <div className="flex items-center gap-4">
-                <span className="text-green-600 bg-green-100 px-4 py-2 rounded-full">Showing {products.length} products</span>
-                <Button 
-                  variant="secondary" 
-                  size="medium" 
-                  onClick={handleViewAllProducts}
-                  className="bg-green-600 text-white hover:bg-green-700"
-                >
+            {products.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                {products.slice(0, 8).map((product) => (
+                  <Card 
+                    key={product.id} 
+                    variant="elevated" 
+                    size="medium" 
+                    className="bg-white hover:shadow-xl transition-all duration-300 hover:-translate-y-2 cursor-pointer group"
+                    onClick={() => handleProductClick(product.id)}
+                  >
+                    <div className="relative overflow-hidden rounded-lg mb-4">
+                      <img 
+                        src={getProductImage(product.imageUrl)} 
+                        alt={product.name}
+                        className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-300"
+                        onError={handleImageError}
+                      />
+                      {product.createdAt && new Date(product.createdAt).getTime() > Date.now() - 7 * 24 * 60 * 60 * 1000 && (
+                        <div className="absolute top-2 left-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
+                          New
+                        </div>
+                      )}
+                      {!product.available && (
+                        <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                          <span className="text-white font-medium">Out of Stock</span>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="p-4">
+                      <h3 className="font-semibold text-gray-800 mb-2 text-lg line-clamp-2 group-hover:text-green-600 transition-colors">
+                        {product.name}
+                      </h3>
+                      
+                      <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+                        {product.description || 'Beautiful bonsai tree for your collection'}
+                      </p>
+                      
+                      <div className="flex items-center justify-between mb-4">
+                        <span className="text-2xl font-bold bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 bg-clip-text text-transparent drop-shadow-sm">
+                          {formatCurrency(product.price)}
+                        </span>
+                        <div className="flex items-center gap-1">
+                          {renderStars(product.rating || 0)}
+                          <span className="text-sm text-green-500 ml-1 font-medium">({product.reviewCount || 0})</span>
+                        </div>
+                      </div>
+                      
+                      <div className="flex gap-2">
+                        <Button 
+                          variant="primary" 
+                          size="small" 
+                          className="flex-1"
+                          disabled={!product.available}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleAddToCart(product);
+                          }}
+                        >
+                          {product.available ? 'Add to Cart' : 'Out of Stock'}
+                        </Button>
+                        <Button 
+                          variant="secondary" 
+                          size="small"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            // TODO: Implement add to wishlist
+                            alert(`${product.name} added to wishlist!`);
+                          }}
+                        >
+                          ♥
+                        </Button>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <div className="text-gray-400 text-6xl mb-4">🌱</div>
+                <h3 className="text-xl font-medium text-gray-600 mb-2">No products available</h3>
+                <p className="text-gray-500">Check back soon for new arrivals!</p>
+              </div>
+            )}
+            
+            {products.length > 8 && (
+              <div className="text-center mt-12">
+                <Button variant="primary" size="large" onClick={handleViewAllProducts}>
                   View All Products →
                 </Button>
               </div>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
-              {products.map((product) => (
-                <Card 
-                  key={product.id} 
-                  variant="product" 
-                  size="large" 
-                  className="h-full group"
-                  onClick={() => handleProductClick(product.id)}
-                >
-                  {/* Product Image Container */}
-                  <div className="relative bg-gradient-to-br from-green-100 via-emerald-100 to-teal-100 h-48 mb-4 rounded-xl flex items-center justify-center overflow-hidden group-hover:scale-105 transition-transform duration-500">
-                    <div className="absolute inset-0 bg-gradient-to-br from-green-300/20 via-emerald-400/20 to-teal-300/20"></div>
-                    <span className="text-6xl relative z-10 group-hover:scale-110 transition-transform duration-300">🌳</span>
-                    <span className="absolute bottom-2 right-2 text-xs text-green-600 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full font-medium shadow-sm">Product Image</span>
-                    
-                    {/* Floating Badge */}
-                    <div className="absolute top-2 right-2 bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 text-white px-3 py-1 rounded-full text-xs font-semibold shadow-lg transform hover:scale-105 transition-transform duration-300">
-                      New
-                    </div>
-                    
-                    {/* Hover Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-green-600/30 via-emerald-600/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  </div>
-                  
-                  {/* Product Info */}
-                  <div className="space-y-3">
-                    <h3 className="text-lg font-bold text-green-800 mb-2 leading-tight drop-shadow-sm group-hover:text-green-700 transition-colors duration-300">
-                      {product.name}
-                    </h3>
-                    <p className="text-green-600 text-sm mb-3 line-clamp-2 leading-relaxed">{product.description}</p>
-                    
-                    {/* Price and Rating Row */}
-                    <div className="flex items-center justify-between mb-4">
-                      <span className="text-2xl font-bold bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 bg-clip-text text-transparent drop-shadow-sm">
-                        {product.price}
-                      </span>
-                      <div className="flex items-center gap-1">
-                        {renderStars(product.rating)}
-                        <span className="text-sm text-green-500 ml-1 font-medium">({product.reviews})</span>
-                      </div>
-                    </div>
-                    
-                    {/* Action Button */}
-                    <Button 
-                      variant="primary" 
-                      size="medium" 
-                      fullWidth
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleAddToCart(product.name);
-                      }}
-                      className="bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 hover:from-green-700 hover:via-emerald-700 hover:to-teal-700 transform hover:scale-105 hover:shadow-lg hover:shadow-green-500/25 transition-all duration-300 font-semibold"
-                    >
-                      🛒 Add to Cart
-                    </Button>
-                  </div>
-                </Card>
-              ))}
-            </div>
-
-            {/* Pagination with Nature Theme */}
-            <div className="flex justify-center items-center gap-3">
-              <button className="px-4 py-2 text-green-600 hover:text-green-800 hover:bg-green-100 rounded-lg transition-colors">‹</button>
-              <button className="px-4 py-2 bg-green-600 text-white rounded-lg shadow-lg">1</button>
-              <button className="px-4 py-2 text-green-600 hover:text-green-800 hover:bg-green-100 rounded-lg transition-colors">2</button>
-              <button className="px-4 py-2 text-green-600 hover:text-green-800 hover:bg-green-100 rounded-lg transition-colors">3</button>
-              <button className="px-4 py-2 text-green-600 hover:text-green-800 hover:bg-green-100 rounded-lg transition-colors">›</button>
-            </div>
+            )}
           </div>
         </section>
 

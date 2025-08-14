@@ -487,7 +487,7 @@ const AdminPage: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-green-100 text-sm font-medium">Total Revenue</p>
-                    <p className="text-3xl font-bold">${stats.totalRevenue.toLocaleString()}</p>
+                    <p className="text-3xl font-bold">৳{stats.totalRevenue.toLocaleString()}</p>
                     <p className="text-green-200 text-xs">+8% from last month</p>
                   </div>
                   <div className="text-4xl">💰</div>
@@ -590,7 +590,7 @@ const AdminPage: React.FC = () => {
                       <tr key={order.id} className="border-b border-gray-100 hover:bg-gray-50">
                         <td className="py-4 px-6 font-medium text-gray-800">{order.id}</td>
                         <td className="py-4 px-6 text-gray-600">{order.customerName}</td>
-                        <td className="py-4 px-6 font-semibold text-gray-800">${order.totalAmount.toFixed(2)}</td>
+                        <td className="py-4 px-6 font-semibold text-gray-800">৳{order.totalAmount.toFixed(2)}</td>
                         <td className="py-4 px-6">
                           <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}>
                             {getStatusIcon(order.status)} {order.status}
@@ -720,7 +720,7 @@ const AdminPage: React.FC = () => {
                           </span>
                         </td>
                         <td className="py-4 px-6 text-gray-800 font-medium">{customer.totalOrders}</td>
-                        <td className="py-4 px-6 text-gray-800 font-medium">${customer.totalSpent.toFixed(2)}</td>
+                        <td className="py-4 px-6 text-gray-800 font-medium">৳{customer.totalSpent.toFixed(2)}</td>
                         <td className="py-4 px-6">
                           <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800">
                             💜 {customer.wishlistItems} items
@@ -778,7 +778,7 @@ const AdminPage: React.FC = () => {
                         <td className="py-4 px-6 font-medium text-gray-800">{product.id}</td>
                         <td className="py-4 px-6 text-gray-800 font-medium">{product.name}</td>
                         <td className="py-4 px-6 text-gray-600">{product.category}</td>
-                        <td className="py-4 px-6 font-semibold text-gray-800">${product.price.toFixed(2)}</td>
+                        <td className="py-4 px-6 font-semibold text-gray-800">৳{product.price.toFixed(2)}</td>
                         <td className="py-4 px-6 text-gray-800 font-medium">{product.stock}</td>
                         <td className="py-4 px-6">
                           <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
@@ -836,7 +836,7 @@ const AdminPage: React.FC = () => {
                       <tr key={order.id} className="border-b border-gray-100 hover:bg-gray-50">
                         <td className="py-4 px-6 font-medium text-gray-800">{order.id}</td>
                         <td className="py-4 px-6 text-gray-600">{order.customerName}</td>
-                        <td className="py-4 px-6 font-semibold text-gray-800">${order.totalAmount.toFixed(2)}</td>
+                        <td className="py-4 px-6 font-semibold text-gray-800">৳{order.totalAmount.toFixed(2)}</td>
                         <td className="py-4 px-6">
                           <select
                             value={order.status}

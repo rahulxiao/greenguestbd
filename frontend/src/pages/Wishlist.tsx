@@ -1,84 +1,63 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Heart, Trash2, ShoppingCart, Eye, ArrowLeft } from 'lucide-react';
+import { Heart, Trash2, ShoppingCart, Eye, ArrowLeft, Loader2 } from 'lucide-react';
 import { Header, Footer } from '../components';
-
-interface WishlistItem {
-  id: number;
-  productId: number;
-  name: string;
-  price: number;
-  imageUrl: string;
-  rating: number;
-  reviews: number;
-  inStock: boolean;
-  stock: number;
-}
+import { wishlistService, WishlistItem } from '../services/wishlist.service';
+import { formatCurrency } from '../utils/price';
 
 const Wishlist: React.FC = () => {
   const navigate = useNavigate();
   const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [removingItem, setRemovingItem] = useState<number | null>(null);
+  const [addingToCart, setAddingToCart] = useState<number | null>(null);
 
-  // Mock wishlist data - replace with actual API call
+  // Fetch real wishlist data from backend
   useEffect(() => {
-    const mockWishlistItems: WishlistItem[] = [
-      {
-        id: 1,
-        productId: 1,
-        name: "Premium Juniper Bonsai",
-        price: 189.99,
-        imageUrl: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400",
-        rating: 4.8,
-        reviews: 127,
-        inStock: true,
-        stock: 10
-      },
-      {
-        id: 2,
-        productId: 2,
-        name: "Japanese Maple Bonsai",
-        price: 249.99,
-        imageUrl: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400",
-        rating: 4.9,
-        reviews: 89,
-        inStock: true,
-        stock: 5
-      },
-      {
-        id: 3,
-        productId: 5,
-        name: "Pine Bonsai Collection",
-        price: 299.99,
-        imageUrl: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400",
-        rating: 4.9,
-        reviews: 67,
-        inStock: false,
-        stock: 0
-      },
-      {
-        id: 4,
-        productId: 7,
-        name: "Ceramic Bonsai Pot",
-        price: 34.99,
-        imageUrl: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400",
-        rating: 4.7,
-        reviews: 203,
-        inStock: true,
-        stock: 25
+    const fetchWishlist = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await wishlistService.getUserWishlist();
+        setWishlistItems(data);
+      } catch (err) {
+        console.error('Failed to fetch wishlist:', err);
+        setError('Failed to load your wishlist. Please try again later.');
+        setWishlistItems([]);
+      } finally {
+        setLoading(false);
       }
-    ];
-    setWishlistItems(mockWishlistItems);
-    setLoading(false);
+    };
+
+    fetchWishlist();
   }, []);
 
-  const removeFromWishlist = (itemId: number) => {
-    setWishlistItems(prev => prev.filter(item => item.id !== itemId));
+  const removeFromWishlist = async (itemId: number) => {
+    try {
+      setRemovingItem(itemId);
+      await wishlistService.removeFromWishlist(itemId);
+      setWishlistItems(prev => prev.filter(item => item.id !== itemId));
+    } catch (err) {
+      console.error('Failed to remove item from wishlist:', err);
+      setError('Failed to remove item from wishlist. Please try again.');
+    } finally {
+      setRemovingItem(null);
+    }
   };
 
-  const addToCart = (item: WishlistItem) => {
-    // Mock add to cart functionality
-    alert(`${item.name} added to cart!`);
+  const addToCart = async (item: WishlistItem) => {
+    try {
+      setAddingToCart(item.id);
+      await wishlistService.moveToCart(item.id);
+      // Remove item from wishlist after moving to cart
+      setWishlistItems(prev => prev.filter(wishlistItem => wishlistItem.id !== item.id));
+    } catch (err) {
+      console.error('Failed to add item to cart:', err);
+      setError('Failed to add item to cart. Please try again.');
+    } finally {
+      setAddingToCart(null);
+    }
   };
 
   const viewProduct = (productId: number) => {
@@ -89,31 +68,15 @@ const Wishlist: React.FC = () => {
     navigate('/');
   };
 
-  const renderStars = (rating: number) => {
-    const stars: React.ReactElement[] = [];
-    for (let i = 1; i <= 5; i++) {
-      stars.push(
-        <svg
-          key={i}
-          className={`h-4 w-4 ${
-            i <= rating ? 'text-yellow-400' : 'text-gray-300'
-          }`}
-          fill="currentColor"
-          viewBox="0 0 20 20"
-        >
-          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-        </svg>
-      );
-    }
-    return stars;
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
         <Header />
         <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+          <div className="text-center">
+            <Loader2 className="animate-spin h-12 w-12 text-green-600 mx-auto mb-4" />
+            <p className="text-gray-600">Loading your wishlist...</p>
+          </div>
         </div>
         <Footer />
       </div>
@@ -148,6 +111,24 @@ const Wishlist: React.FC = () => {
       <Header />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Error Message */}
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div className="flex items-center">
+              <svg className="h-5 w-5 text-red-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p className="text-sm font-medium text-red-800">{error}</p>
+              <button
+                onClick={() => setError(null)}
+                className="ml-auto text-red-400 hover:text-red-600"
+              >
+                ×
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center">
             <button
@@ -170,8 +151,12 @@ const Wishlist: React.FC = () => {
               <div className="relative">
                 <img
                   src={item.imageUrl}
-                  alt={item.name}
+                  alt={item.productName}
                   className="w-full h-48 object-cover"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400';
+                  }}
                 />
                 
                 {/* Stock Status Badge */}
@@ -184,36 +169,36 @@ const Wishlist: React.FC = () => {
                 {/* Remove from Wishlist Button */}
                 <button
                   onClick={() => removeFromWishlist(item.id)}
-                  className="absolute top-2 right-2 p-2 bg-white rounded-full shadow-md hover:bg-red-50 text-red-600 hover:text-red-700 transition-colors"
+                  disabled={removingItem === item.id}
+                  className="absolute top-2 right-2 p-2 bg-white rounded-full shadow-md hover:bg-red-50 text-red-600 hover:text-red-700 transition-colors disabled:opacity-50"
                 >
-                  <Trash2 className="h-4 w-4" />
+                  {removingItem === item.id ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Trash2 className="h-4 w-4" />
+                  )}
                 </button>
               </div>
               
               <div className="p-4">
                 <h3 className="text-lg font-medium text-gray-900 mb-2 line-clamp-2">
-                  {item.name}
+                  {item.productName}
                 </h3>
                 
-                {/* Rating */}
-                <div className="flex items-center mb-2">
-                  <div className="flex items-center">
-                    {renderStars(item.rating)}
-                  </div>
-                  <span className="text-sm text-gray-600 ml-1">
-                    ({item.reviews})
-                  </span>
-                </div>
+                {/* Category */}
+                <p className="text-sm text-gray-500 mb-2">{item.category}</p>
                 
                 {/* Price */}
-                <p className="text-xl font-semibold text-green-600 mb-3">
-                  ${item.price.toFixed(2)}
-                </p>
+                <div className="text-right mb-3">
+                  <p className="text-lg font-semibold text-green-600">
+                    {formatCurrency(item.price)}
+                  </p>
+                </div>
                 
                 {/* Stock Info */}
                 {item.inStock ? (
                   <p className="text-sm text-green-600 mb-3">
-                    In Stock ({item.stock} available)
+                    In Stock
                   </p>
                 ) : (
                   <p className="text-sm text-red-600 mb-3">
@@ -233,10 +218,14 @@ const Wishlist: React.FC = () => {
                   
                   <button
                     onClick={() => addToCart(item)}
-                    disabled={!item.inStock}
+                    disabled={!item.inStock || addingToCart === item.id}
                     className="flex-1 flex items-center justify-center px-3 py-2 bg-green-600 text-white rounded-md text-sm font-medium hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <ShoppingCart className="h-4 w-4 mr-1" />
+                    {addingToCart === item.id ? (
+                      <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                    ) : (
+                      <ShoppingCart className="h-4 w-4 mr-1" />
+                    )}
                     Add to Cart
                   </button>
                 </div>
@@ -256,10 +245,10 @@ const Wishlist: React.FC = () => {
             </div>
             
             <div className="text-center">
+              <p className="text-sm text-gray-600">Total Value:</p>
               <p className="text-2xl font-bold text-green-600">
-                ${wishlistItems.reduce((sum, item) => sum + item.price, 0).toFixed(2)}
+                {formatCurrency(wishlistItems.reduce((sum, item) => sum + item.price, 0))}
               </p>
-              <p className="text-sm text-gray-600">Total Value</p>
             </div>
             
             <div className="text-center">
@@ -280,12 +269,21 @@ const Wishlist: React.FC = () => {
               </button>
               
               <button
-                onClick={() => {
+                onClick={async () => {
                   const inStockItems = wishlistItems.filter(item => item.inStock);
                   if (inStockItems.length > 0) {
-                    alert(`Adding ${inStockItems.length} in-stock items to cart!`);
+                    try {
+                      // Add all in-stock items to cart
+                      for (const item of inStockItems) {
+                        await wishlistService.moveToCart(item.id);
+                      }
+                      // Remove all in-stock items from wishlist
+                      setWishlistItems(prev => prev.filter(item => !item.inStock));
+                    } catch (err) {
+                      setError('Failed to add some items to cart. Please try again.');
+                    }
                   } else {
-                    alert('No items in stock to add to cart.');
+                    setError('No items in stock to add to cart.');
                   }
                 }}
                 className="flex-1 px-4 py-2 bg-green-600 text-white rounded-md text-sm font-medium hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
@@ -293,39 +291,6 @@ const Wishlist: React.FC = () => {
                 Add All In-Stock to Cart
               </button>
             </div>
-          </div>
-        </div>
-
-        {/* Recommendations */}
-        <div className="mt-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">You might also like</h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {/* Mock recommendation items */}
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow cursor-pointer">
-                <img
-                  src="https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400"
-                  alt="Recommended product"
-                  className="w-full h-48 object-cover"
-                />
-                <div className="p-4">
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    Recommended Bonsai {i}
-                  </h3>
-                  <div className="flex items-center mb-2">
-                    {renderStars(4.5)}
-                    <span className="text-sm text-gray-600 ml-1">(45)</span>
-                  </div>
-                  <p className="text-xl font-semibold text-green-600 mb-3">
-                    ${(99.99 + i * 10).toFixed(2)}
-                  </p>
-                  <button className="w-full px-3 py-2 bg-green-600 text-white rounded-md text-sm font-medium hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-                    Add to Wishlist
-                  </button>
-                </div>
-              </div>
-            ))}
           </div>
         </div>
       </div>

@@ -52,27 +52,7 @@ export class InventoryController {
   @Post('history')
   @HttpCode(HttpStatus.CREATED)
   async addInventoryHistory(@Body() historyData: any) {
-    const {
-      productId,
-      type,
-      quantity,
-      reason,
-      reference,
-      supplierId,
-      cost,
-      notes,
-    } = historyData;
-
-    return await this.inventoryService.addInventoryHistory(
-      productId,
-      type,
-      quantity,
-      reason,
-      reference,
-      supplierId,
-      cost,
-      notes,
-    );
+    return await this.inventoryService.addInventoryHistory(historyData);
   }
 
   @Get('history/:productId')

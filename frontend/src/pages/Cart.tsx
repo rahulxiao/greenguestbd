@@ -177,7 +177,7 @@ const Cart: React.FC = () => {
                         <h3 className="text-lg font-medium text-gray-900">{item.name}</h3>
                         <p className="text-gray-600">Stock: {item.stock} available</p>
                         <p className="text-lg font-semibold text-green-600">
-                          ${item.price.toFixed(2)}
+                          ৳{item.price.toFixed(2)}
                         </p>
                       </div>
 
@@ -203,8 +203,11 @@ const Cart: React.FC = () => {
                         </div>
 
                         <div className="text-right">
-                          <p className="text-lg font-semibold text-gray-900">
-                            ${(item.price * item.quantity).toFixed(2)}
+                          <p className="text-lg font-semibold text-green-600">
+                            ৳{item.price.toFixed(2)}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            Total: ৳{(item.price * item.quantity).toFixed(2)}
                           </p>
                         </div>
 
@@ -228,31 +231,27 @@ const Cart: React.FC = () => {
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Order Summary</h2>
               
               <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Subtotal</span>
-                  <span className="font-medium">${getSubtotal().toFixed(2)}</span>
+                <div className="flex justify-between items-center py-2">
+                  <span className="font-medium">Subtotal:</span>
+                  <span className="font-medium">৳{getSubtotal().toFixed(2)}</span>
                 </div>
                 
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Shipping</span>
+                <div className="flex justify-between items-center py-2">
+                  <span className="font-medium">Shipping:</span>
                   <span className="font-medium">
-                    {getShipping() === 0 ? 'Free' : `$${getShipping().toFixed(2)}`}
+                    {getShipping() === 0 ? 'Free' : `৳${getShipping().toFixed(2)}`}
                   </span>
                 </div>
                 
                 {getShipping() > 0 && (
-                  <div className="text-sm text-green-600">
-                    Add ${(100 - getSubtotal()).toFixed(2)} more for free shipping
+                  <div className="text-sm text-gray-600 text-center py-2 border-t border-gray-200">
+                    Add ৳{(100 - getSubtotal()).toFixed(2)} more for free shipping
                   </div>
                 )}
                 
-                <div className="border-t border-gray-200 pt-3">
-                  <div className="flex justify-between">
-                    <span className="text-lg font-semibold text-gray-900">Total</span>
-                    <span className="text-lg font-semibold text-gray-900">
-                      ${getTotal().toFixed(2)}
-                    </span>
-                  </div>
+                <div className="flex justify-between items-center py-2 border-t border-gray-200">
+                  <span className="text-lg font-bold">Total:</span>
+                  <span className="text-lg font-bold text-green-600">৳{getTotal().toFixed(2)}</span>
                 </div>
               </div>
 

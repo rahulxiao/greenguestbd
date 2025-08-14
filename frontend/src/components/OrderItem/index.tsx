@@ -86,13 +86,13 @@ const OrderItem: React.FC<OrderItemProps> = ({
               {/* Price & Quantity */}
               <div className="flex items-center space-x-4 mb-3">
                 <div className="text-sm text-gray-600">
-                  <span className="font-medium">Price:</span> ${price.toFixed(2)}
+                  <span className="font-medium">Price:</span> ৳{price.toFixed(2)}
                 </div>
                 <div className="text-sm text-gray-600">
                   <span className="font-medium">Quantity:</span> {quantity}
                 </div>
                 <div className="text-sm text-gray-600">
-                  <span className="font-medium">Total:</span> ${totalPrice.toFixed(2)}
+                  <span className="font-medium">Total:</span> ৳{totalPrice.toFixed(2)}
                 </div>
               </div>
             </div>

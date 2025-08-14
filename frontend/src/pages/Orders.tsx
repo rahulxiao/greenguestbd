@@ -269,9 +269,9 @@ const Orders: React.FC = () => {
                             />
                             <div className="flex-1">
                               <p className="text-sm font-medium text-gray-900">{item.name}</p>
-                              <p className="text-sm text-gray-600">
-                                Qty: {item.quantity} • ${item.price.toFixed(2)}
-                              </p>
+                              <div className="text-sm text-gray-600">
+                                Qty: {item.quantity} • ৳{item.price.toFixed(2)}
+                              </div>
                             </div>
                           </div>
                         ))}
@@ -281,9 +281,9 @@ const Orders: React.FC = () => {
                     <div>
                       <h4 className="text-sm font-medium text-gray-900 mb-2">Order Summary</h4>
                       <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Total:</span>
-                          <span className="font-medium">${order.total.toFixed(2)}</span>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600">Total:</span>
+                          <span className="font-medium">৳{order.total.toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-600">Shipping Address:</span>
@@ -351,7 +351,10 @@ const Orders: React.FC = () => {
                       </div>
                       <div>
                         <p className="text-gray-600">Total:</p>
-                        <p className="font-medium">${selectedOrder.total.toFixed(2)}</p>
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600">Order Total:</p>
+                          <p className="text-2xl font-bold text-green-600">৳{selectedOrder.total.toFixed(2)}</p>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -388,14 +391,12 @@ const Orders: React.FC = () => {
                             <p className="text-sm text-gray-600">
                               Quantity: {item.quantity}
                             </p>
-                            <p className="text-sm text-gray-600">
-                              Price: ${item.price.toFixed(2)} each
-                            </p>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-sm font-medium text-gray-900">
-                              ${(item.price * item.quantity).toFixed(2)}
-                            </p>
+                            <div className="text-sm text-gray-600">
+                              Price: ৳{item.price.toFixed(2)} each
+                            </div>
+                            <div className="text-sm text-gray-600">
+                              Total: ৳{(item.price * item.quantity).toFixed(2)}
+                            </div>
                           </div>
                         </div>
                       ))}

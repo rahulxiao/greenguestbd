@@ -462,39 +462,37 @@ const Checkout: React.FC = () => {
                     <div className="ml-3 flex-1">
                       <h3 className="text-sm font-medium text-gray-900">{item.name}</h3>
                       <p className="text-sm text-gray-600">Qty: {item.quantity}</p>
-                      <p className="text-sm font-medium text-gray-900">
-                        ${(item.price * item.quantity).toFixed(2)}
-                      </p>
+                      <div className="text-right">
+                        <p className="text-sm text-gray-600">
+                          ৳{(item.price * item.quantity).toFixed(2)}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 ))}
               </div>
               
               <div className="border-t border-gray-200 mt-4 pt-4 space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Subtotal</span>
-                  <span className="font-medium">${subtotal.toFixed(2)}</span>
+                <div className="flex justify-between items-center py-2">
+                  <span className="font-medium">Subtotal:</span>
+                  <span className="font-medium">৳{subtotal.toFixed(2)}</span>
                 </div>
                 
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Shipping</span>
+                <div className="flex justify-between items-center py-2">
+                  <span className="font-medium">Shipping:</span>
                   <span className="font-medium">
-                    {shipping === 0 ? 'Free' : `$${shipping.toFixed(2)}`}
+                    {shipping === 0 ? 'Free' : `৳${shipping.toFixed(2)}`}
                   </span>
                 </div>
                 
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Tax</span>
-                  <span className="font-medium">${tax.toFixed(2)}</span>
+                <div className="flex justify-between items-center py-2">
+                  <span className="font-medium">Tax:</span>
+                  <span className="font-medium">৳{tax.toFixed(2)}</span>
                 </div>
                 
-                <div className="border-t border-gray-200 pt-2">
-                  <div className="flex justify-between">
-                    <span className="text-lg font-semibold text-gray-900">Total</span>
-                    <span className="text-lg font-semibold text-gray-900">
-                      ${total.toFixed(2)}
-                    </span>
-                  </div>
+                <div className="flex justify-between items-center py-2 border-t border-gray-200">
+                  <span className="text-lg font-bold">Total:</span>
+                  <span className="text-lg font-bold text-green-600">৳{total.toFixed(2)}</span>
                 </div>
               </div>
 
