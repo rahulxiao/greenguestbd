@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, Button, Header, Footer } from '../components';
-import { Star, Heart, ShoppingCart, Truck, Shield, Leaf, ArrowLeft, Share2, MessageCircle } from 'lucide-react';
+import { Star, Heart, ShoppingCart, Truck, Shield, Leaf, ArrowLeft, Share2, MessageCircle, Loader2 } from 'lucide-react';
+import { wishlistService } from '../services/wishlist.service';
+import { cartService } from '../services/cart.service';
+import { productService, Product as ServiceProduct } from '../services/product.service';
 
-interface Product {
+// Product interface for the details page (separate from service interface)
+interface ProductDetails {
   id: number;
   name: string;
   price: number;
@@ -39,114 +43,201 @@ interface Review {
 const ProductDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [product, setProduct] = useState<Product | null>(null);
+  const [product, setProduct] = useState<ProductDetails | null>(null);
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('description');
   const [reviews, setReviews] = useState<Review[]>([]);
+  const [isInWishlist, setIsInWishlist] = useState(false);
+  const [wishlistLoading, setWishlistLoading] = useState(false);
+  const [cartLoading, setCartLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
-  // Mock product data
-  const mockProduct: Product = {
-    id: 1,
-    name: "Premium Juniper Bonsai Tree - 5 Year Old Specimen",
-    price: 189.99,
-    originalPrice: 249.99,
-    description: "A stunning 5-year-old Juniper bonsai with beautiful natural curves and mature foliage. Perfect for both beginners and experienced enthusiasts.",
-    longDescription: "This exceptional Juniper bonsai specimen has been carefully cultivated for over 5 years, developing a natural, windswept appearance that mimics ancient trees found in nature. The tree features a thick, gnarled trunk with beautiful bark texture, multiple branches that create depth and dimension, and dense, healthy foliage that responds well to pruning and shaping.\n\nJuniper bonsai are known for their resilience and adaptability, making them excellent choices for bonsai enthusiasts of all skill levels. This specimen has been trained using traditional Japanese techniques and comes with detailed care instructions to help you maintain its beauty for years to come.\n\nThe tree is potted in a high-quality ceramic pot that complements its natural beauty and provides excellent drainage. Each tree is unique, with its own character and personality, making it a truly special addition to your collection.",
-    images: [
-      "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600",
-      "https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=600",
-      "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=600",
-      "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=600"
-    ],
-    category: "Trees",
-    rating: 4.8,
-    reviewCount: 127,
-    inStock: true,
-    stockQuantity: 8,
-    dimensions: {
-      height: "12 inches",
-      width: "8 inches",
-      depth: "6 inches"
-    },
-    careLevel: "Beginner",
-    age: "5 years",
-    features: [
-      "Naturally curved trunk with mature bark",
-      "Dense, healthy foliage",
-      "Professional training and shaping",
-      "High-quality ceramic pot included",
-      "Detailed care instructions",
-      "Certificate of authenticity"
-    ],
-    specifications: {
-      "Species": "Juniperus chinensis",
-      "Style": "Windswept (Fukinagashi)",
-      "Pot Material": "Unglazed ceramic",
-      "Soil Type": "Well-draining bonsai mix",
-      "Watering": "Moderate",
-      "Light": "Full sun to partial shade",
-      "Temperature": "Hardy to -20°F (-29°C)",
-      "Fertilizer": "Balanced, slow-release"
+  // Transform service product to product details
+  const transformProduct = (serviceProduct: ServiceProduct): ProductDetails => {
+    // Ensure price is a number
+    let price: number;
+    if (typeof serviceProduct.price === 'number') {
+      price = serviceProduct.price;
+    } else if (typeof serviceProduct.price === 'string') {
+      price = parseFloat(serviceProduct.price) || 0;
+    } else {
+      price = 0;
     }
+    
+    return {
+      id: serviceProduct.id,
+      name: serviceProduct.name,
+      price: price,
+      description: serviceProduct.description || 'No description available.',
+      longDescription: serviceProduct.description || 'No detailed description available.',
+      images: serviceProduct.imageUrl ? [serviceProduct.imageUrl] : ['https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=600'],
+      category: serviceProduct.category,
+      rating: serviceProduct.rating || 0,
+      reviewCount: serviceProduct.reviewCount || 0,
+      inStock: serviceProduct.available,
+      stockQuantity: serviceProduct.stock || 0,
+      dimensions: {
+        height: serviceProduct.dimensions || 'Standard',
+        width: 'Standard',
+        depth: 'Standard'
+      },
+      careLevel: 'Beginner',
+      age: 'New',
+      features: ['Quality bonsai', 'Professional care', 'Beautiful design'],
+      specifications: {
+        'Category': serviceProduct.category,
+        'Brand': serviceProduct.brand || 'GreenGuest',
+        'Stock': (serviceProduct.stock || 0).toString(),
+        'SKU': serviceProduct.sku || 'N/A'
+      }
+    };
   };
 
-  // Mock reviews data
-  const mockReviews: Review[] = [
-    {
-      id: 1,
-      userName: "Sarah M.",
-      rating: 5,
-      date: "2024-01-15",
-      comment: "Absolutely beautiful tree! The quality exceeded my expectations. It arrived in perfect condition and the care instructions are very helpful. Highly recommend!",
-      helpful: 12
-    },
-    {
-      id: 2,
-      userName: "Michael R.",
-      rating: 5,
-      date: "2024-01-10",
-      comment: "This is my first bonsai and I'm so glad I chose this one. The tree is healthy and well-shaped. The customer service was excellent too.",
-      helpful: 8
-    },
-    {
-      id: 3,
-      userName: "Jennifer L.",
-      rating: 4,
-      date: "2024-01-05",
-      comment: "Great quality bonsai. The trunk has nice character and the foliage is dense. Only giving 4 stars because shipping took longer than expected.",
-      helpful: 5
-    }
-  ];
-
+  // Fetch real product data from backend
   useEffect(() => {
-    // Simulate API call
     const fetchProduct = async () => {
-      setLoading(true);
-      await new Promise(resolve => setTimeout(resolve, 800));
-      setProduct(mockProduct);
-      setReviews(mockReviews);
-      setLoading(false);
+      if (!id) return;
+      
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // Fetch real product data from backend
+        const serviceProduct = await productService.getProductById(parseInt(id));
+        console.log('Raw product data from backend:', serviceProduct);
+        
+        const productDetails = transformProduct(serviceProduct);
+        console.log('Transformed product data:', productDetails);
+        
+        setProduct(productDetails);
+        
+        // For now, keep mock reviews until backend review service is implemented
+        // TODO: Replace with real review service call
+        const mockReviews: Review[] = [
+          {
+            id: 1,
+            userName: "Sarah M.",
+            rating: 5,
+            date: "2024-01-15",
+            comment: "Absolutely beautiful tree! The quality exceeded my expectations. It arrived in perfect condition and the care instructions are very helpful. Highly recommend!",
+            helpful: 12
+          },
+          {
+            id: 2,
+            userName: "Michael R.",
+            rating: 5,
+            date: "2024-01-10",
+            comment: "This is my first bonsai and I'm so glad I chose this one. The tree is healthy and well-shaped. The customer service was excellent too.",
+            helpful: 8
+          },
+          {
+            id: 3,
+            userName: "Jennifer L.",
+            rating: 4,
+            date: "2024-01-05",
+            comment: "Great quality bonsai. The trunk has nice character and the foliage is dense. Only giving 4 stars because shipping took longer than expected.",
+            helpful: 5
+          }
+        ];
+        setReviews(mockReviews);
+        
+      } catch (err) {
+        console.error('Failed to fetch product:', err);
+        setError('Failed to load product. Please try again later.');
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchProduct();
   }, [id]);
 
+  // Check if product is in wishlist
+  useEffect(() => {
+    const checkWishlistStatus = async () => {
+      if (product && product.id) {
+        try {
+          const inWishlist = await wishlistService.isInWishlist(product.id);
+          setIsInWishlist(inWishlist);
+        } catch (err) {
+          console.error('Failed to check wishlist status:', err);
+        }
+      }
+    };
+
+    checkWishlistStatus();
+  }, [product]);
+
   const handleQuantityChange = (newQuantity: number) => {
-    if (newQuantity >= 1 && newQuantity <= product?.stockQuantity!) {
+    if (product && newQuantity >= 1 && newQuantity <= product.stockQuantity) {
       setQuantity(newQuantity);
     }
   };
 
-  const addToCart = () => {
-    // Add to cart logic here
-    alert(`${quantity} ${product?.name} added to cart!`);
+  const addToCart = async () => {
+    if (!product) return;
+    
+    try {
+      setCartLoading(true);
+      setError(null);
+      setSuccess(null);
+      
+      await cartService.addToCart({
+        productId: product.id,
+        quantity: quantity
+      });
+      
+      setSuccess(`${quantity} ${product.name} added to cart!`);
+      setTimeout(() => setSuccess(null), 3000);
+      
+      // Dispatch event to update header cart count
+      window.dispatchEvent(new CustomEvent('cartUpdated'));
+      
+      // Navigate to cart after a short delay
+      setTimeout(() => navigate('/cart'), 1500);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to add to cart';
+      setError(errorMessage);
+      setTimeout(() => setError(null), 3000);
+    } finally {
+      setCartLoading(false);
+    }
   };
 
-  const addToWishlist = () => {
-    // Add to wishlist logic here
-    alert(`${product?.name} added to wishlist!`);
+  const addToWishlist = async () => {
+    if (!product) return;
+    
+    try {
+      setWishlistLoading(true);
+      setError(null);
+      setSuccess(null);
+      
+      if (isInWishlist) {
+        // Remove from wishlist
+        await wishlistService.removeProductFromWishlist(product.id);
+        setIsInWishlist(false);
+        setSuccess(`${product.name} removed from wishlist!`);
+      } else {
+        // Add to wishlist
+        await wishlistService.addToWishlist(product.id);
+        setIsInWishlist(true);
+        setSuccess(`${product.name} added to wishlist!`);
+      }
+      
+      // Dispatch event to update header wishlist count
+      window.dispatchEvent(new CustomEvent('wishlistUpdated'));
+      
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to update wishlist';
+      setError(errorMessage);
+      setTimeout(() => setError(null), 3000);
+    } finally {
+      setWishlistLoading(false);
+    }
   };
 
   const renderStars = (rating: number) => {
@@ -200,12 +291,41 @@ const ProductDetails: React.FC = () => {
           </button>
         </div>
 
+        {/* Success/Error Messages */}
+        {success && (
+          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+            <div className="flex items-center">
+              <svg className="h-5 w-5 text-green-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              <p className="text-sm font-medium text-green-800">{success}</p>
+            </div>
+          </div>
+        )}
+        
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div className="flex items-center">
+              <svg className="h-5 w-5 text-red-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p className="text-sm font-medium text-red-800">{error}</p>
+              <button
+                onClick={() => setError(null)}
+                className="ml-auto text-red-400 hover:text-red-600"
+              >
+                ×
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 mb-8 sm:mb-12">
           {/* Product Images */}
           <div className="space-y-4">
             <div className="relative">
               <img
-                src={product.images[selectedImage]}
+                src={product.images && product.images.length > 0 ? product.images[selectedImage] : 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=600'}
                 alt={product.name}
                 className="w-full h-64 sm:h-80 lg:h-96 object-cover rounded-lg"
               />
@@ -217,25 +337,27 @@ const ProductDetails: React.FC = () => {
             </div>
             
             {/* Thumbnail Images */}
-            <div className="grid grid-cols-4 gap-2">
-              {product.images.map((image, index) => (
-                <button
-                  key={index}
-                  onClick={() => setSelectedImage(index)}
-                  className={`relative overflow-hidden rounded-lg border-2 transition-all ${
-                    selectedImage === index 
-                      ? 'border-green-500' 
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <img
-                    src={image}
-                    alt={`${product.name} view ${index + 1}`}
-                    className="w-full h-16 sm:h-20 object-cover"
-                  />
-                </button>
-              ))}
-            </div>
+            {product.images && product.images.length > 0 && (
+              <div className="grid grid-cols-4 gap-2">
+                {product.images.map((image, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setSelectedImage(index)}
+                    className={`relative overflow-hidden rounded-lg border-2 transition-all ${
+                      selectedImage === index 
+                        ? 'border-green-500' 
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <img
+                      src={image}
+                      alt={`${product.name} view ${index + 1}`}
+                      className="w-full h-16 sm:h-20 object-cover"
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Product Info */}
@@ -260,11 +382,11 @@ const ProductDetails: React.FC = () => {
             {/* Price */}
             <div className="flex items-center space-x-3">
               <span className="text-3xl sm:text-4xl font-bold text-green-600">
-                ৳{product.price.toFixed(2)}
+                ৳{typeof product.price === 'number' ? product.price.toFixed(2) : '0.00'}
               </span>
               {product.originalPrice && (
                 <span className="text-xl text-gray-500 line-through">
-                  ৳{product.originalPrice.toFixed(2)}
+                  ৳{typeof product.originalPrice === 'number' ? product.originalPrice.toFixed(2) : '0.00'}
                 </span>
               )}
             </div>
@@ -285,19 +407,19 @@ const ProductDetails: React.FC = () => {
             <div className="grid grid-cols-2 gap-4 py-4 border-t border-b border-gray-200">
               <div>
                 <span className="text-sm text-gray-500">Care Level</span>
-                <p className="font-medium text-gray-900">{product.careLevel}</p>
+                <p className="font-medium text-gray-900">{product.careLevel || 'Beginner'}</p>
               </div>
               <div>
                 <span className="text-sm text-gray-500">Age</span>
-                <p className="font-medium text-gray-900">{product.age}</p>
+                <p className="font-medium text-gray-900">{product.age || 'New'}</p>
               </div>
               <div>
                 <span className="text-sm text-gray-500">Height</span>
-                <p className="font-medium text-gray-900">{product.dimensions.height}</p>
+                <p className="font-medium text-gray-900">{product.dimensions?.height || 'Standard'}</p>
               </div>
               <div>
                 <span className="text-sm text-gray-500">Width</span>
-                <p className="font-medium text-gray-900">{product.dimensions.width}</p>
+                <p className="font-medium text-gray-900">{product.dimensions?.width || 'Standard'}</p>
               </div>
             </div>
 
@@ -330,19 +452,20 @@ const ProductDetails: React.FC = () => {
               <Button
                 variant="primary"
                 onClick={addToCart}
-                disabled={!product.inStock}
+                disabled={!product.inStock || cartLoading}
                 className="flex-1"
               >
-                <ShoppingCart className="h-4 w-4 mr-2" />
-                {product.inStock ? 'Add to Cart' : 'Out of Stock'}
+                {cartLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <ShoppingCart className="h-4 w-4 mr-2" />}
+                {cartLoading ? 'Adding...' : product.inStock ? 'Add to Cart' : 'Out of Stock'}
               </Button>
               <Button
                 variant="secondary"
                 onClick={addToWishlist}
+                disabled={wishlistLoading}
                 className="flex-1"
               >
-                <Heart className="h-4 w-4 mr-2" />
-                Add to Wishlist
+                {wishlistLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Heart className="h-4 w-4 mr-2" />}
+                {wishlistLoading ? 'Updating...' : isInWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'}
               </Button>
             </div>
 
@@ -414,7 +537,7 @@ const ProductDetails: React.FC = () => {
             {/* Specifications Tab */}
             {activeTab === 'specifications' && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {Object.entries(product.specifications).map(([key, value]) => (
+                {product.specifications && Object.entries(product.specifications).map(([key, value]) => (
                   <div key={key} className="border-b border-gray-100 pb-3">
                     <dt className="font-medium text-gray-900 text-sm sm:text-base">{key}</dt>
                     <dd className="text-gray-600 text-sm sm:text-base">{value}</dd>
@@ -426,7 +549,7 @@ const ProductDetails: React.FC = () => {
             {/* Features Tab */}
             {activeTab === 'features' && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {product.features.map((feature, index) => (
+                {product.features && product.features.map((feature, index) => (
                   <div key={index} className="flex items-start space-x-3">
                     <div className="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
                     <span className="text-gray-700 text-sm sm:text-base">{feature}</span>

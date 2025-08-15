@@ -16,7 +16,10 @@ import Search from './pages/Search';
 import Orders from './pages/Orders';
 import About from './pages/About';
 import Contact from './pages/Contact';
+import ProtectedRoute from './components/ProtectedRoute';
 import { productService, Product } from './services/product.service';
+import { cartService } from './services/cart.service';
+import { wishlistService } from './services/wishlist.service';
 import { formatCurrency } from './utils/price';
 import { getProductImage, handleImageError } from './utils/image';
 
@@ -66,11 +69,27 @@ function HomePage() {
 
   const handleAddToCart = async (product: Product) => {
     try {
-      // TODO: Implement add to cart functionality
-      alert(`${product.name} added to cart!`);
-      navigate('/cart');
+      await cartService.addToCart({ productId: product.id, quantity: 1 });
+      // Dispatch event to update header cart count
+      window.dispatchEvent(new CustomEvent('cartUpdated'));
+      // Show success feedback
+      alert(`${product.name} added to cart successfully!`);
     } catch (err) {
-      alert('Failed to add to cart');
+      console.error('Failed to add to cart:', err);
+      alert('Failed to add to cart. Please try again.');
+    }
+  };
+
+  const handleAddToWishlist = async (product: Product) => {
+    try {
+      await wishlistService.addToWishlist(product.id);
+      // Dispatch event to update header wishlist count
+      window.dispatchEvent(new CustomEvent('wishlistUpdated'));
+      // Show success feedback
+      alert(`${product.name} added to wishlist successfully!`);
+    } catch (err) {
+      console.error('Failed to add to wishlist:', err);
+      alert('Failed to add to wishlist. Please try again.');
     }
   };
 
@@ -372,8 +391,7 @@ function HomePage() {
                           size="small"
                           onClick={(e) => {
                             e.stopPropagation();
-                            // TODO: Implement add to wishlist
-                            alert(`${product.name} added to wishlist!`);
+                            handleAddToWishlist(product);
                           }}
                         >
                           ♥
@@ -490,7 +508,11 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/product/:id" element={<ProductDetails />} />
-        <Route path="/admin" element={<AdminPage />} />
+        <Route path="/admin" element={
+          <ProtectedRoute requireAdmin={true}>
+            <AdminPage />
+          </ProtectedRoute>
+        } />
         <Route path="/profile" element={<UserProfile />} />
         <Route path="/terms" element={<TermsOfService />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />

@@ -34,6 +34,37 @@ export class ProductController {
     return await this.productService.getAllProducts();
   }
 
+  @Get('getProductsPaginated')
+  async getProductsPaginated(
+    @Query('page', ParseIntPipe) page: number = 1,
+    @Query('limit', ParseIntPipe) limit: number = 15,
+    @Query('category') category?: string,
+    @Query('search') search?: string,
+    @Query('minPrice') minPrice?: number,
+    @Query('maxPrice') maxPrice?: number,
+    @Query('rating') rating?: number,
+    @Query('sortBy') sortBy?: string
+  ): Promise<{
+    products: ProductResponseDto[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  }> {
+    return await this.productService.getProductsPaginated({
+      page,
+      limit,
+      category,
+      search,
+      minPrice,
+      maxPrice,
+      rating,
+      sortBy
+    });
+  }
+
   @Get('getProductById/:id')
   async getProductById(@Param('id', ParseIntPipe) id: number): Promise<ProductResponseDto> {
     return await this.productService.getProductById(id);
@@ -98,5 +129,10 @@ export class ProductController {
   @Get('getProductsInStock')
   async getProductsInStock(): Promise<ProductResponseDto[]> {
     return await this.productService.getProductsInStock();
+  }
+
+  @Get('getCategories')
+  async getCategories(): Promise<string[]> {
+    return await this.productService.getCategories();
   }
 } 

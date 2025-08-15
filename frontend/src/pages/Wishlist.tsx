@@ -4,6 +4,7 @@ import { Heart, Trash2, ShoppingCart, Eye, ArrowLeft, Loader2 } from 'lucide-rea
 import { Header, Footer } from '../components';
 import { wishlistService, WishlistItem } from '../services/wishlist.service';
 import { formatCurrency } from '../utils/price';
+import { getProductImage, handleImageError } from '../utils/image';
 
 const Wishlist: React.FC = () => {
   const navigate = useNavigate();
@@ -38,6 +39,9 @@ const Wishlist: React.FC = () => {
       setRemovingItem(itemId);
       await wishlistService.removeFromWishlist(itemId);
       setWishlistItems(prev => prev.filter(item => item.id !== itemId));
+      
+      // Dispatch event to update header wishlist count
+      window.dispatchEvent(new CustomEvent('wishlistUpdated'));
     } catch (err) {
       console.error('Failed to remove item from wishlist:', err);
       setError('Failed to remove item from wishlist. Please try again.');
@@ -52,6 +56,10 @@ const Wishlist: React.FC = () => {
       await wishlistService.moveToCart(item.id);
       // Remove item from wishlist after moving to cart
       setWishlistItems(prev => prev.filter(wishlistItem => wishlistItem.id !== item.id));
+      
+      // Dispatch events to update header counts
+      window.dispatchEvent(new CustomEvent('wishlistUpdated'));
+      window.dispatchEvent(new CustomEvent('cartUpdated'));
     } catch (err) {
       console.error('Failed to add item to cart:', err);
       setError('Failed to add item to cart. Please try again.');
@@ -150,13 +158,10 @@ const Wishlist: React.FC = () => {
             <div key={item.id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
               <div className="relative">
                 <img
-                  src={item.imageUrl}
+                  src={getProductImage(item.imageUrl)}
                   alt={item.productName}
                   className="w-full h-48 object-cover"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.src = 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400';
-                  }}
+                  onError={handleImageError}
                 />
                 
                 {/* Stock Status Badge */}

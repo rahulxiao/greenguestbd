@@ -107,6 +107,15 @@ class UserService {
     }
   }
 
+  async getAllUsers(): Promise<UserProfile[]> {
+    try {
+      const response = await apiService.get<UserProfile[]>('/users/getAllUsers');
+      return response;
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : 'Failed to fetch all users');
+    }
+  }
+
   async updateNotificationSettings(settings: {
     orderUpdates: boolean;
     newProducts: boolean;

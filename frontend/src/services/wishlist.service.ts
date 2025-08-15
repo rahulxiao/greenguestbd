@@ -18,8 +18,23 @@ export interface AddToWishlistData {
 class WishlistService {
   async getUserWishlist(): Promise<WishlistItem[]> {
     try {
-      const response = await apiService.get<WishlistItem[]>('/wishlist/user-wishlist');
-      return response;
+      const response = await apiService.get<{ items: any[]; totalItems: number }>('/wishlist/getUserWishlist');
+      const items = Array.isArray(response?.items) ? response.items : [];
+      const mapped: WishlistItem[] = items.map((it: any) => {
+        const product = it.product || {};
+        const priceNumber = typeof product.price === 'string' ? parseFloat(product.price) : (product.price ?? 0);
+        return {
+          id: it.id,
+          productId: it.productId ?? product.id,
+          productName: product.name ?? 'Product',
+          price: isNaN(priceNumber) ? 0 : priceNumber,
+          imageUrl: product.imageUrl ?? '/placeholder-product.jpg',
+          category: product.category ?? '',
+          inStock: !!product.available && (product.stock ?? 0) > 0,
+          addedAt: it.createdAt ? new Date(it.createdAt) : new Date()
+        } as WishlistItem;
+      });
+      return mapped;
     } catch (error) {
       throw new Error(error instanceof Error ? error.message : 'Failed to fetch wishlist');
     }
@@ -27,7 +42,7 @@ class WishlistService {
 
   async addToWishlist(productId: number): Promise<{ success: boolean; message: string }> {
     try {
-      const response = await apiService.post<{ success: boolean; message: string }>('/wishlist/add', { productId });
+      const response = await apiService.post<{ success: boolean; message: string }>('/wishlist/addToWishlist', { productId });
       return response;
     } catch (error) {
       throw new Error(error instanceof Error ? error.message : 'Failed to add item to wishlist');
@@ -36,10 +51,19 @@ class WishlistService {
 
   async removeFromWishlist(itemId: number): Promise<{ success: boolean; message: string }> {
     try {
-      const response = await apiService.delete<{ success: boolean; message: string }>(`/wishlist/${itemId}`);
+      const response = await apiService.delete<{ success: boolean; message: string }>(`/wishlist/removeFromWishlist/${itemId}`);
       return response;
     } catch (error) {
       throw new Error(error instanceof Error ? error.message : 'Failed to remove item from wishlist');
+    }
+  }
+
+  async removeProductFromWishlist(productId: number): Promise<{ success: boolean; message: string }> {
+    try {
+      const response = await apiService.delete<{ success: boolean; message: string }>(`/wishlist/product/${productId}`);
+      return response;
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : 'Failed to remove product from wishlist');
     }
   }
 
@@ -54,7 +78,7 @@ class WishlistService {
 
   async clearWishlist(): Promise<{ success: boolean; message: string }> {
     try {
-      const response = await apiService.delete<{ success: boolean; message: string }>('/wishlist/clear');
+      const response = await apiService.delete<{ success: boolean; message: string }>('/wishlist/clearUserWishlist');
       return response;
     } catch (error) {
       throw new Error(error instanceof Error ? error.message : 'Failed to clear wishlist');
@@ -63,8 +87,8 @@ class WishlistService {
 
   async isInWishlist(productId: number): Promise<boolean> {
     try {
-      const response = await apiService.get<{ inWishlist: boolean }>(`/wishlist/check/${productId}`);
-      return response.inWishlist;
+      const response = await apiService.get<{ isInWishlist: boolean }>(`/wishlist/checkProductInWishlist?productId=${productId}`);
+      return response.isInWishlist;
     } catch (error) {
       return false;
     }

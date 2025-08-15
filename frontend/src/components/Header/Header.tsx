@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Search, Menu, X, ShoppingCart, Heart, Wifi, User, LogOut, Package, Settings, ChevronDown } from 'lucide-react';
 import ConnectionTestService from '../../services/connection-test';
 import { authService } from '../../services/auth.service';
+import { cartService } from '../../services/cart.service';
+import { wishlistService } from '../../services/wishlist.service';
 
 interface HeaderProps {
   title?: string;
@@ -22,16 +24,34 @@ const Header: React.FC<HeaderProps> = ({
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [cartCount, setCartCount] = useState(0);
+  const [wishlistCount, setWishlistCount] = useState(0);
 
-  // Check authentication status on component mount
+  // Check authentication status and fetch cart/wishlist counts on component mount
   useEffect(() => {
-    const checkAuth = () => {
+    const checkAuth = async () => {
       try {
         const token = localStorage.getItem('authToken');
         const userData = localStorage.getItem('user');
         
         if (token && userData) {
           setUser(JSON.parse(userData));
+          
+          // Fetch cart and wishlist counts
+          try {
+            const [cartTotal, wishlistItems] = await Promise.all([
+              cartService.getCartTotal(),
+              wishlistService.getUserWishlist()
+            ]);
+            
+            setCartCount(cartTotal.itemCount || 0);
+            setWishlistCount(wishlistItems.length || 0);
+          } catch (error) {
+            console.error('Failed to fetch cart/wishlist counts:', error);
+            // Set default values if API calls fail
+            setCartCount(0);
+            setWishlistCount(0);
+          }
         }
       } catch (error) {
         console.error('Error checking auth:', error);
@@ -41,6 +61,44 @@ const Header: React.FC<HeaderProps> = ({
     };
 
     checkAuth();
+  }, []);
+
+  // Function to refresh cart and wishlist counts
+  const refreshCounts = async () => {
+    try {
+      const [cartTotal, wishlistItems] = await Promise.all([
+        cartService.getCartTotal(),
+        wishlistService.getUserWishlist()
+      ]);
+      
+      setCartCount(cartTotal.itemCount || 0);
+      setWishlistCount(wishlistItems.length || 0);
+    } catch (error) {
+      console.error('Failed to refresh counts:', error);
+    }
+  };
+
+  // Listen for cart/wishlist updates
+  useEffect(() => {
+    // Refresh counts when component mounts or when user changes
+    if (user) {
+      refreshCounts();
+    }
+  }, [user]);
+
+  // Expose refresh function to parent components
+  useEffect(() => {
+    // Add event listeners for cart/wishlist updates
+    const handleCartUpdate = () => refreshCounts();
+    const handleWishlistUpdate = () => refreshCounts();
+    
+    window.addEventListener('cartUpdated', handleCartUpdate);
+    window.addEventListener('wishlistUpdated', handleWishlistUpdate);
+    
+    return () => {
+      window.removeEventListener('cartUpdated', handleCartUpdate);
+      window.removeEventListener('wishlistUpdated', handleWishlistUpdate);
+    };
   }, []);
 
   const handleLogout = async () => {
@@ -237,7 +295,7 @@ const Header: React.FC<HeaderProps> = ({
                 <Heart className="h-4 w-4" />
               </div>
               <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center shadow-lg">
-                2
+                {wishlistCount}
               </span>
             </Link>
             
@@ -246,7 +304,7 @@ const Header: React.FC<HeaderProps> = ({
                 <ShoppingCart className="h-4 w-4" />
               </div>
               <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center shadow-lg">
-                3
+                {cartCount}
               </span>
             </Link>
             

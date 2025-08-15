@@ -5,11 +5,13 @@ export { orderService } from './order.service';
 export { wishlistService } from './wishlist.service';
 export { reviewService } from './review.service';
 export { userService } from './user.service';
+export { adminService } from './admin.service';
 
 // Export types
 export type { Product, ProductSearchParams, CreateProductData, UpdateProductData } from './product.service';
 export type { LoginData, RegisterData, AuthResponse, UserProfile } from './auth.service';
 export type { UpdateProfileData, UserProfile as UserProfileData } from './user.service';
+export type { AdminLoginData, AdminResponse, AdminProfile } from './admin.service';
 
 export type {
   CartItem,

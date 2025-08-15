@@ -74,6 +74,15 @@ class OrderService {
       throw new Error(error instanceof Error ? error.message : 'Failed to fetch orders by status');
     }
   }
+
+  async getAllOrders(): Promise<Order[]> {
+    try {
+      const response = await apiService.get<Order[]>('/orders/getAllOrders');
+      return response;
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : 'Failed to fetch all orders');
+    }
+  }
 }
 
 export const orderService = new OrderService();

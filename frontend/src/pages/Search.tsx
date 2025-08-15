@@ -3,95 +3,182 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Header, Footer, Card, Button } from '../components';
 import { Search as SearchIcon, Filter, ChevronDown, ChevronUp, Grid, List, ShoppingCart, Heart, Star } from 'lucide-react';
 import { productService, Product } from '../services/product.service';
+import { cartService } from '../services/cart.service';
+import { wishlistService } from '../services/wishlist.service';
 import { formatCurrency } from '../utils/price';
+import { getProductImage, handleImageError } from '../utils/image';
+
+// Custom styles for range sliders
+const rangeSliderStyles = `
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #10b981;
+    cursor: pointer;
+    border: 2px solid white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+  
+  input[type="range"]::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #10b981;
+    cursor: pointer;
+    border: 2px solid white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+  
+  input[type="range"]::-ms-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #10b981;
+    cursor: pointer;
+    border: 2px solid white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+`;
 
 const Search: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [sortBy, setSortBy] = useState('relevance');
-  const [priceRange, setPriceRange] = useState([0, 1000]);
+  const [priceRange, setPriceRange] = useState([0, 100000]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedRatings, setSelectedRatings] = useState<number[]>([]);
   const [showFilters, setShowFilters] = useState(false);
   const [activeFilterCount, setActiveFilterCount] = useState(0);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalProducts, setTotalProducts] = useState(0);
+  const [hasNext, setHasNext] = useState(false);
+  const [hasPrev, setHasPrev] = useState(false);
+  const productsPerPage = 15;
 
   const query = searchParams.get('q') || '';
 
-  const categories = ['Bonsai Trees', 'Pots & Containers', 'Tools & Equipment', 'Soil & Fertilizers', 'Books & Guides'];
+  const [categories, setCategories] = useState<string[]>([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
+  const [pendingPriceRange, setPendingPriceRange] = useState([0, 100000]);
   const ratings = [5, 4, 3, 2, 1];
+
+  const formatPrice = (price: number) => {
+    if (price >= 1000) {
+      return `৳${(price / 1000).toFixed(price % 1000 === 0 ? 0 : 1)}k`;
+    }
+    return `৳${price}`;
+  };
+
+  const addToCart = async (productId: number) => {
+    try {
+      await cartService.addToCart({ productId, quantity: 1 });
+      // Dispatch event to update header cart count
+      window.dispatchEvent(new CustomEvent('cartUpdated'));
+      // Show success feedback (you can add a toast notification here)
+      console.log('Product added to cart successfully');
+    } catch (error) {
+      console.error('Failed to add to cart:', error);
+      // Show error feedback (you can add a toast notification here)
+    }
+  };
+
+  const addToWishlist = async (productId: number) => {
+    try {
+      await wishlistService.addToWishlist(productId);
+      // Dispatch event to update header wishlist count
+      window.dispatchEvent(new CustomEvent('wishlistUpdated'));
+      // Show success feedback (you can add a toast notification here)
+      console.log('Product added to wishlist successfully');
+    } catch (error) {
+      console.error('Failed to add to wishlist:', error);
+      // Show error feedback (you can add a toast notification here)
+    }
+  };
+
+  const fetchCategories = async () => {
+    setCategoriesLoading(true);
+    try {
+      const fetchedCategories = await productService.getCategories();
+      setCategories(fetchedCategories);
+    } catch (err) {
+      console.error('Failed to fetch categories:', err);
+      // Fallback to some default categories if API fails
+      setCategories(['Bonsai Trees', 'Pots & Containers', 'Tools & Equipment', 'Soil & Fertilizers']);
+    } finally {
+      setCategoriesLoading(false);
+    }
+  };
 
   const fetchProducts = async () => {
     setLoading(true);
     setError(null);
     
     try {
-      let fetchedProducts: Product[];
+      // Use paginated API instead of fetching all products
+      const paginatedResult = await productService.getProductsPaginated({
+        page: currentPage,
+        limit: productsPerPage,
+        category: selectedCategories.length > 0 ? selectedCategories[0] : undefined, // For now, use first category if multiple selected
+        search: query.trim() || undefined,
+        minPrice: priceRange[0] > 0 ? priceRange[0] : undefined,
+        maxPrice: priceRange[1] < 100000 ? priceRange[1] : undefined,
+        rating: selectedRatings.length > 0 ? Math.max(...selectedRatings) : undefined,
+        sortBy: sortBy !== 'relevance' ? sortBy : undefined
+      });
+
+      // Update pagination state
+      setProducts(paginatedResult.products);
+      setTotalPages(paginatedResult.totalPages);
+      setTotalProducts(paginatedResult.total);
+      setHasNext(paginatedResult.hasNext);
+      setHasPrev(paginatedResult.hasPrev);
       
-      if (query.trim()) {
-        // Search by name if query exists
-        fetchedProducts = await productService.getProductsByName(query);
-      } else {
-        // Get all products and apply filters
-        fetchedProducts = await productService.getAllProducts();
-      }
-
-      // Apply client-side filtering
-      let filteredProducts = fetchedProducts.filter(product => {
-        // Category filter
-        if (selectedCategories.length > 0 && !selectedCategories.includes(product.category)) {
-          return false;
-        }
-        
-        // Price filter
-        if (product.price < priceRange[0] || product.price > priceRange[1]) {
-          return false;
-        }
-        
-        // Rating filter
-        if (selectedRatings.length > 0 && !selectedRatings.some(rating => product.rating >= rating)) {
-          return false;
-        }
-        
-        return true;
-      });
-
-      // Apply sorting
-      filteredProducts.sort((a, b) => {
-        switch (sortBy) {
-          case 'price-low':
-            return a.price - b.price;
-          case 'price-high':
-            return b.price - a.price;
-          case 'rating':
-            return b.rating - a.rating;
-          case 'newest':
-            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-          default:
-            return 0;
-        }
-      });
-
-      setProducts(filteredProducts);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch products');
       setProducts([]);
+      setTotalPages(1);
+      setTotalProducts(0);
+      setHasNext(false);
+      setHasPrev(false);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchProducts();
+    // Reset to page 1 when filters change
+    setCurrentPage(1);
   }, [query, sortBy, priceRange, selectedCategories, selectedRatings]);
+
+  useEffect(() => {
+    fetchProducts();
+  }, [currentPage, query, sortBy, priceRange, selectedCategories, selectedRatings]);
+
+  useEffect(() => {
+    // Fetch categories when component mounts
+    fetchCategories();
+  }, []);
+
+  useEffect(() => {
+    // Initialize pending price range when component mounts
+    setPendingPriceRange([0, 100000]);
+  }, []);
 
   useEffect(() => {
     // Calculate active filter count
     const categoryCount = selectedCategories.length;
     const ratingCount = selectedRatings.length;
-    const priceCount = priceRange[0] > 0 || priceRange[1] < 1000 ? 1 : 0;
+    const priceCount = priceRange[0] > 0 || priceRange[1] < 100000 ? 1 : 0;
     const sortCount = sortBy !== 'relevance' ? 1 : 0;
     
     setActiveFilterCount(categoryCount + ratingCount + priceCount + sortCount);
@@ -116,7 +203,8 @@ const Search: React.FC = () => {
   const clearFilters = () => {
     setSelectedCategories([]);
     setSelectedRatings([]);
-    setPriceRange([0, 1000]);
+    setPriceRange([0, 100000]);
+    setPendingPriceRange([0, 100000]);
     setSortBy('relevance');
   };
 
@@ -178,6 +266,7 @@ const Search: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <style>{rangeSliderStyles}</style>
       <Header />
       
       <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-3 sm:py-4 lg:py-8">
@@ -237,45 +326,208 @@ const Search: React.FC = () => {
 
               {/* Categories */}
               <div className="mb-6">
-                <h3 className="font-medium text-gray-700 mb-3 text-sm sm:text-base">Categories</h3>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-medium text-gray-700 text-sm sm:text-base">Categories</h3>
+                  <button
+                    onClick={fetchCategories}
+                    disabled={categoriesLoading}
+                    className="text-xs text-green-600 hover:text-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    title="Refresh categories"
+                  >
+                    ↻
+                  </button>
+                </div>
                 <div className="space-y-2">
-                  {categories.map(category => (
-                    <label key={category} className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={selectedCategories.includes(category)}
-                        onChange={() => handleCategoryToggle(category)}
-                        className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
-                      />
-                      <span className="ml-2 text-sm text-gray-600">{category}</span>
-                    </label>
-                  ))}
+                  {categoriesLoading ? (
+                    // Loading state
+                    <div className="animate-pulse space-y-2">
+                      {[...Array(5)].map((_, i) => (
+                        <div key={i} className="flex items-center">
+                          <div className="w-4 h-4 bg-gray-200 rounded"></div>
+                          <div className="ml-2 h-4 bg-gray-200 rounded w-24"></div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : categories.length === 0 ? (
+                    // Empty state
+                    <div className="text-center py-4">
+                      <p className="text-sm text-gray-500">No categories available</p>
+                    </div>
+                  ) : (
+                    // Categories list
+                    categories.map(category => (
+                      <label key={category} className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={selectedCategories.includes(category)}
+                          onChange={() => handleCategoryToggle(category)}
+                          className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+                        />
+                        <span className="ml-2 text-sm text-gray-600">{category}</span>
+                      </label>
+                    ))
+                  )}
                 </div>
               </div>
 
               {/* Price Range */}
               <div className="mb-6">
-                <h3 className="font-medium text-gray-700 mb-3 text-sm sm:text-base">Price Range</h3>
-                <div className="space-y-3">
-                  <div className="flex items-center space-x-2">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-medium text-gray-700 text-sm sm:text-base">Price Range</h3>
+                  <button
+                    onClick={() => {
+                      setPriceRange([0, 100000]);
+                      setPendingPriceRange([0, 100000]);
+                    }}
+                    disabled={priceRange[0] === 0 && priceRange[1] === 100000}
+                    className="text-xs text-green-600 hover:text-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    title="Reset price range"
+                  >
+                    Reset
+                  </button>
+                </div>
+                <div className="space-y-4">
+                  {/* Range Slider */}
+                  <div className="relative">
+                    <div className="h-2 bg-gray-200 rounded-lg">
+                      <div 
+                        className="h-2 bg-green-500 rounded-lg absolute"
+                        style={{
+                          left: `${(priceRange[0] / 100000) * 100}%`,
+                          right: `${100 - (priceRange[1] / 100000) * 100}%`
+                        }}
+                      ></div>
+                    </div>
                     <input
-                      type="number"
+                      type="range"
+                      min="0"
+                      max="100000"
+                      step="1000"
                       value={priceRange[0]}
-                      onChange={(e) => setPriceRange([parseInt(e.target.value) || 0, priceRange[1]])}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-                      placeholder="Min"
+                      onChange={(e) => {
+                        const value = parseInt(e.target.value);
+                        if (value <= priceRange[1]) {
+                          setPriceRange([value, priceRange[1]]);
+                        }
+                      }}
+                      className="absolute w-full h-2 bg-transparent appearance-none cursor-pointer pointer-events-none"
+                      style={{
+                        top: '-8px',
+                        left: '0',
+                        right: '0'
+                      }}
                     />
-                    <span className="text-gray-500 text-sm">-</span>
                     <input
-                      type="number"
+                      type="range"
+                      min="0"
+                      max="100000"
+                      step="1000"
                       value={priceRange[1]}
-                      onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value) || 1000])}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-                      placeholder="Max"
+                      onChange={(e) => {
+                        const value = parseInt(e.target.value);
+                        if (value >= priceRange[0]) {
+                          setPriceRange([priceRange[0], value]);
+                        }
+                      }}
+                      className="absolute w-full h-2 bg-transparent appearance-none cursor-pointer pointer-events-none"
+                      style={{
+                        top: '-8px',
+                        left: '0',
+                        right: '0'
+                      }}
                     />
                   </div>
-                  <div className="text-xs text-gray-500 text-center">
-                    ${priceRange[0]} - ${priceRange[1]}
+                  
+                  {/* Input Fields */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Min Price</label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm">৳</span>
+                        <input
+                          type="number"
+                          min="0"
+                          max={priceRange[1]}
+                          value={pendingPriceRange[0]}
+                          onChange={(e) => {
+                            const value = parseInt(e.target.value) || 0;
+                            setPendingPriceRange([value, pendingPriceRange[1]]);
+                          }}
+                          onKeyPress={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              const value = parseInt(e.currentTarget.value) || 0;
+                              if (value <= priceRange[1]) {
+                                setPriceRange([value, priceRange[1]]);
+                                setPendingPriceRange([value, pendingPriceRange[1]]);
+                              }
+                            }
+                          }}
+                          onBlur={() => {
+                            setPendingPriceRange([priceRange[0], pendingPriceRange[1]]);
+                          }}
+                          className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                          placeholder="0"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Max Price</label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm">৳</span>
+                        <input
+                          type="number"
+                          min={priceRange[0]}
+                          max="100000"
+                          value={pendingPriceRange[1]}
+                          onChange={(e) => {
+                            const value = parseInt(e.target.value) || 100000;
+                            setPendingPriceRange([Math.min(priceRange[0], value), value]);
+                          }}
+                          onKeyPress={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              const value = parseInt(e.currentTarget.value) || 100000;
+                              setPriceRange([Math.min(priceRange[0], value), value]);
+                              setPendingPriceRange([Math.min(priceRange[0], value), value]);
+                            }
+                          }}
+                          onBlur={() => {
+                            setPendingPriceRange([priceRange[0], priceRange[1]]);
+                          }}
+                          className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                          placeholder="100000"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Price Display */}
+                  <div className="text-center">
+                    <span className="text-sm font-medium text-gray-700">
+                      {formatPrice(priceRange[0])} - {formatPrice(priceRange[1])}
+                    </span>
+                  </div>
+                  
+                  {/* Quick Price Buttons */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {[1000, 5000, 10000, 25000, 50000, 100000].map((price) => (
+                      <button
+                        key={price}
+                        onClick={() => {
+                          setPriceRange([0, price]);
+                          setPendingPriceRange([0, price]);
+                        }}
+                        className={`px-3 py-2 text-xs rounded-lg border transition-colors ${
+                          priceRange[1] === price
+                            ? 'bg-green-100 text-green-700 border-green-300'
+                            : 'bg-gray-100 text-gray-600 border-gray-300 hover:bg-gray-200'
+                        }`}
+                      >
+                        Under {formatPrice(price)}
+                      </button>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -356,30 +608,56 @@ const Search: React.FC = () => {
             </div>
 
             {/* Products */}
-            {products.length === 0 ? (
-              <div className="text-center py-8 sm:py-12">
+            {!loading && products.length === 0 && (
+              <div className="text-center py-12">
                 <div className="text-gray-400 mb-4">
-                  <SearchIcon className="h-12 w-12 sm:h-16 sm:w-16 mx-auto" />
+                  <svg className="mx-auto h-12 w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
                 </div>
                 <h3 className="text-lg font-medium text-gray-900 mb-2">No products found</h3>
-                <p className="text-gray-600 text-sm sm:text-base">
-                  Try adjusting your search criteria or filters
+                <p className="text-gray-600 mb-4">
+                  {query ? `No products match "${query}"` : 'Try adjusting your filters or search terms'}
                 </p>
+                {query && (
+                  <button
+                    onClick={() => setSearchParams({})}
+                    className="text-green-600 hover:text-green-700 font-medium"
+                  >
+                    Clear search
+                  </button>
+                )}
               </div>
-            ) : (
+            )}
+            
+            {/* Products Grid */}
+            {!loading && products.length > 0 && (
               <div className={`grid gap-3 sm:gap-4 lg:gap-6 ${
                 viewMode === 'grid' 
                   ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' 
                   : 'grid-cols-1'
               }`}>
                 {products.map(product => (
-                  <Card key={product.id} className="bg-white hover:shadow-lg transition-shadow">
-                    <div className={viewMode === 'list' ? 'flex flex-col sm:flex-row' : ''}>
+                  <Card key={product.id} className="bg-white hover:shadow-lg transition-all duration-200 cursor-pointer group border border-gray-200 hover:border-green-300">
+                    <div 
+                      className={viewMode === 'list' ? 'flex flex-col sm:flex-row' : ''}
+                      onClick={() => navigate(`/product/${product.id}`)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          navigate(`/product/${product.id}`);
+                        }
+                      }}
+                      tabIndex={0}
+                      role="button"
+                      aria-label={`View details for ${product.name}`}
+                    >
                       <div className={`relative ${viewMode === 'list' ? 'sm:w-48' : ''}`}>
                         <img
-                          src={product.imageUrl || '/placeholder-product.jpg'}
+                          src={getProductImage(product.imageUrl)}
                           alt={product.name}
-                          className={`w-full object-cover rounded-lg ${
+                          onError={handleImageError}
+                          className={`w-full object-cover rounded-lg transition-transform duration-200 group-hover:scale-105 ${
                             viewMode === 'list' ? 'h-32 sm:h-48' : 'h-40 sm:h-48 lg:h-56'
                           }`}
                         />
@@ -402,7 +680,7 @@ const Search: React.FC = () => {
                           </span>
                         </div>
                         
-                        <h3 className="font-semibold text-gray-800 mb-2 text-sm sm:text-base line-clamp-2">
+                        <h3 className="font-semibold text-gray-800 mb-2 text-sm sm:text-base line-clamp-2 group-hover:text-green-600 transition-colors duration-200">
                           {product.name}
                         </h3>
                         
@@ -417,14 +695,21 @@ const Search: React.FC = () => {
                           <span className="text-lg sm:text-xl font-bold text-green-600">
                             {formatCurrency(product.price)}
                           </span>
+                          <span className="ml-auto text-xs text-gray-400 group-hover:text-green-500 transition-colors duration-200">
+                            Click to view details →
+                          </span>
                         </div>
                         
-                        <div className="flex flex-col space-y-2">
+                        <div className="flex flex-col space-y-2" onClick={(e) => e.stopPropagation()}>
                           <Button 
                             variant="primary" 
                             size="small" 
                             className="w-full"
                             disabled={!product.available}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              addToCart(product.id);
+                            }}
                           >
                             <ShoppingCart className="h-4 w-4 mr-1" />
                             {product.available ? 'Add to Cart' : 'Out of Stock'}
@@ -433,6 +718,10 @@ const Search: React.FC = () => {
                             variant="secondary" 
                             size="small"
                             className="w-full"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              addToWishlist(product.id);
+                            }}
                           >
                             <Heart className="h-4 w-4 mr-1" />
                             Wishlist
@@ -442,6 +731,65 @@ const Search: React.FC = () => {
                     </div>
                   </Card>
                 ))}
+              </div>
+            )}
+            
+            {/* Pagination Controls */}
+            {!loading && products.length > 0 && (
+              <div className="mt-8 flex items-center justify-between">
+                <div className="text-sm text-gray-600">
+                  Showing {((currentPage - 1) * productsPerPage) + 1} to {Math.min(currentPage * productsPerPage, totalProducts)} of {totalProducts} products
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  {/* Previous Page Button */}
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={!hasPrev}
+                    className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Previous
+                  </button>
+                  
+                  {/* Page Numbers */}
+                  <div className="flex items-center space-x-1">
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      let pageNum;
+                      if (totalPages <= 5) {
+                        pageNum = i + 1;
+                      } else if (currentPage <= 3) {
+                        pageNum = i + 1;
+                      } else if (currentPage >= totalPages - 2) {
+                        pageNum = totalPages - 4 + i;
+                      } else {
+                        pageNum = currentPage - 2 + i;
+                      }
+                      
+                      return (
+                        <button
+                          key={pageNum}
+                          onClick={() => setCurrentPage(pageNum)}
+                          className={`px-3 py-2 text-sm font-medium rounded-md ${
+                            currentPage === pageNum
+                              ? 'bg-green-600 text-white'
+                              : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-50 hover:text-gray-700'
+                          }`}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  
+                  {/* Next Page Button */}
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={!hasNext}
+                    className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Next
+                  </button>
+                </div>
               </div>
             )}
           </div>

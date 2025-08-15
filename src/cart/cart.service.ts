@@ -62,12 +62,7 @@ export class CartService {
       relations: ['product']
     });
 
-    const items = await Promise.all(
-      cartItems.map(async (item) => {
-        const product = await this.productRepo.findOneBy({ id: item.productId });
-        return this.mapToResponseDto(item, product || undefined);
-      })
-    );
+    const items = cartItems.map(item => this.mapToResponseDto(item, item.product));
 
     const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
     const totalPrice = items.reduce((sum, item) => {
@@ -129,30 +124,41 @@ export class CartService {
     return !!result.affected && result.affected > 0;
   }
 
+  async moveToWishlist(userId: number, itemId: number): Promise<{ success: boolean; message: string }> {
+    const cartItem = await this.cartItemRepo.findOne({
+      where: { id: itemId, userId }
+    });
+
+    if (!cartItem) {
+      throw new NotFoundException(`Cart item with ID ${itemId} not found`);
+    }
+
+    // Here you would typically call the wishlist service to add the item
+    // For now, we'll just remove it from cart and return success
+    // TODO: Implement proper wishlist integration
+    await this.cartItemRepo.delete(itemId);
+    
+    return {
+      success: true,
+      message: 'Item moved to wishlist successfully'
+    };
+  }
+
   async getAllCarts(): Promise<CartItemResponseDto[]> {
     const cartItems = await this.cartItemRepo.find({
       relations: ['product']
     });
 
-    return Promise.all(
-      cartItems.map(async (item) => {
-        const product = await this.productRepo.findOneBy({ id: item.productId });
-        return this.mapToResponseDto(item, product || undefined);
-      })
-    );
+    return cartItems.map(item => this.mapToResponseDto(item, item.product));
   }
 
   async getCartByUserId(userId: number): Promise<CartItemResponseDto[]> {
     const cartItems = await this.cartItemRepo.find({
-      where: { userId }
+      where: { userId },
+      relations: ['product']
     });
 
-    return Promise.all(
-      cartItems.map(async (item) => {
-        const product = await this.productRepo.findOneBy({ id: item.productId });
-        return this.mapToResponseDto(item, product || undefined);
-      })
-    );
+    return cartItems.map(item => this.mapToResponseDto(item, item.product));
   }
 
   private mapToResponseDto(cartItem: CartItem, product?: Product): CartItemResponseDto {

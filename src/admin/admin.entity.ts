@@ -5,46 +5,46 @@ export class Admin {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ name: 'first_name' })
   firstName: string;
 
-  @Column()
+  @Column({ name: 'last_name' })
   lastName: string;
 
-  @Column({ unique: true })
+  @Column({ name: 'email', unique: true })
   email: string;
 
-  @Column()
+  @Column({ name: 'password' })
   password: string;
 
-  @Column({ nullable: true })
+  @Column({ name: 'phone_number', nullable: true })
   phoneNumber?: string;
 
-  @Column({ default: 'admin' })
+  @Column({ name: 'role', default: 'admin' })
   role: string;
 
-  @Column({ default: true })
+  @Column({ name: 'is_active', default: true })
   isActive: boolean;
 
-  @Column({ nullable: true })
+  @Column({ name: 'last_login_at', nullable: true })
   lastLoginAt: Date;
 
-  @Column({ nullable: true })
+  @Column({ name: 'last_login_ip', nullable: true })
   lastLoginIp: string;
 
-  @Column({ nullable: true })
+  @Column({ name: 'position', nullable: true })
   position: string;
 
-  @Column({ type: 'text', nullable: true })
+  @Column({ name: 'bio', type: 'text', nullable: true })
   bio: string;
 
-  @Column({ nullable: true })
+  @Column({ name: 'timezone', nullable: true })
   timezone: string;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 
   get fullName(): string {

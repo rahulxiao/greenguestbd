@@ -30,6 +30,101 @@ export class ProductService {
     return products.map(product => this.mapToResponseDto(product));
   }
 
+  async getProductsPaginated(params: {
+    page: number;
+    limit: number;
+    category?: string;
+    search?: string;
+    minPrice?: number;
+    maxPrice?: number;
+    rating?: number;
+    sortBy?: string;
+  }): Promise<{
+    products: ProductResponseDto[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  }> {
+    const { page, limit, category, search, minPrice, maxPrice, rating, sortBy } = params;
+    
+    // Build query builder
+    let queryBuilder = this.productRepo.createQueryBuilder('product');
+    
+    // Apply filters
+    if (category) {
+      queryBuilder = queryBuilder.andWhere('product.category = :category', { category });
+    }
+    
+    if (search) {
+      queryBuilder = queryBuilder.andWhere(
+        '(product.name ILIKE :search OR product.description ILIKE :search)',
+        { search: `%${search}%` }
+      );
+    }
+    
+    if (minPrice !== undefined) {
+      queryBuilder = queryBuilder.andWhere('product.price >= :minPrice', { minPrice });
+    }
+    
+    if (maxPrice !== undefined) {
+      queryBuilder = queryBuilder.andWhere('product.price <= :maxPrice', { maxPrice });
+    }
+    
+    if (rating !== undefined) {
+      queryBuilder = queryBuilder.andWhere('product.rating >= :rating', { rating });
+    }
+    
+    // Apply sorting
+    if (sortBy) {
+      switch (sortBy) {
+        case 'price-low':
+          queryBuilder = queryBuilder.orderBy('product.price', 'ASC');
+          break;
+        case 'price-high':
+          queryBuilder = queryBuilder.orderBy('product.price', 'DESC');
+          break;
+        case 'rating':
+          queryBuilder = queryBuilder.orderBy('product.rating', 'DESC');
+          break;
+        case 'newest':
+          queryBuilder = queryBuilder.orderBy('product.createdAt', 'DESC');
+          break;
+        default:
+          queryBuilder = queryBuilder.orderBy('product.id', 'ASC');
+      }
+    } else {
+      queryBuilder = queryBuilder.orderBy('product.id', 'ASC');
+    }
+    
+    // Get total count
+    const total = await queryBuilder.getCount();
+    
+    // Apply pagination
+    const offset = (page - 1) * limit;
+    queryBuilder = queryBuilder.skip(offset).take(limit);
+    
+    // Get products
+    const products = await queryBuilder.getMany();
+    
+    // Calculate pagination info
+    const totalPages = Math.ceil(total / limit);
+    const hasNext = page < totalPages;
+    const hasPrev = page > 1;
+    
+    return {
+      products: products.map(product => this.mapToResponseDto(product)),
+      total,
+      page,
+      limit,
+      totalPages,
+      hasNext,
+      hasPrev
+    };
+  }
+
   async getProductById(id: number): Promise<ProductResponseDto> {
     const product = await this.productRepo.findOneBy({ id });
     if (!product) {
@@ -111,6 +206,18 @@ export class ProductService {
       where: { stock: 0 }
     });
     return products.map(product => this.mapToResponseDto(product));
+  }
+
+  async getCategories(): Promise<string[]> {
+    const categories = await this.productRepo
+      .createQueryBuilder('product')
+      .select('DISTINCT product.category', 'category')
+      .where('product.category IS NOT NULL')
+      .andWhere('product.category != :empty', { empty: '' })
+      .orderBy('product.category', 'ASC')
+      .getRawMany();
+    
+    return categories.map(cat => cat.category);
   }
 
   async updateProductStock(id: number, newStock: number): Promise<ProductResponseDto> {

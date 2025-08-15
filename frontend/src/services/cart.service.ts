@@ -29,24 +29,36 @@ export interface UpdateCartItemData {
 class CartService {
   async getCartItems(): Promise<CartItem[]> {
     try {
-      return await apiService.get<CartItem[]>('/cart/getCartItems');
+      console.log('🔍 CartService: Fetching cart items...');
+      const response = await apiService.get<CartItem[]>('/cart/getCartItems');
+      console.log('✅ CartService: Successfully fetched cart items:', response);
+      return response;
     } catch (error) {
+      console.error('❌ CartService: Failed to fetch cart items:', error);
       throw new Error(error instanceof Error ? error.message : 'Failed to fetch cart items');
     }
   }
 
   async addToCart(data: AddToCartData): Promise<CartItem> {
     try {
-      return await apiService.post<CartItem>('/cart/addToCart', data);
+      console.log('🛒 CartService: Adding to cart:', data);
+      const response = await apiService.post<CartItem>('/cart/addToCart', data);
+      console.log('✅ CartService: Successfully added to cart:', response);
+      return response;
     } catch (error) {
+      console.error('❌ CartService: Failed to add to cart:', error);
       throw new Error(error instanceof Error ? error.message : 'Failed to add item to cart');
     }
   }
 
   async updateCartItem(itemId: number, data: UpdateCartItemData): Promise<CartItem> {
     try {
-      return await apiService.put<CartItem>(`/cart/updateCartItem/${itemId}`, data);
+      console.log('✏️ CartService: Updating cart item:', itemId, data);
+      const response = await apiService.put<CartItem>(`/cart/updateCartItemQuantity/${itemId}`, data);
+      console.log('✅ CartService: Successfully updated cart item:', response);
+      return response;
     } catch (error) {
+      console.error('❌ CartService: Failed to update cart item:', error);
       throw new Error(error instanceof Error ? error.message : 'Failed to update cart item');
     }
   }

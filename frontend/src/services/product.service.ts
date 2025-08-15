@@ -60,6 +60,43 @@ class ProductService {
     }
   }
 
+  async getProductsPaginated(params: {
+    page: number;
+    limit: number;
+    category?: string;
+    search?: string;
+    minPrice?: number;
+    maxPrice?: number;
+    rating?: number;
+    sortBy?: string;
+  }): Promise<{
+    products: Product[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  }> {
+    try {
+      const queryParams = new URLSearchParams();
+      queryParams.append('page', params.page.toString());
+      queryParams.append('limit', params.limit.toString());
+      
+      if (params.category) queryParams.append('category', params.category);
+      if (params.search) queryParams.append('search', params.search);
+      if (params.minPrice) queryParams.append('minPrice', params.minPrice.toString());
+      if (params.maxPrice) queryParams.append('maxPrice', params.maxPrice.toString());
+      if (params.rating) queryParams.append('rating', params.rating.toString());
+      if (params.sortBy) queryParams.append('sortBy', params.sortBy);
+
+      const endpoint = `/products/getProductsPaginated?${queryParams.toString()}`;
+      return await apiService.get(endpoint);
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : 'Failed to fetch paginated products');
+    }
+  }
+
   async getProductById(id: number): Promise<Product> {
     try {
       return await apiService.get<Product>(`/products/getProductById/${id}`);
@@ -125,6 +162,14 @@ class ProductService {
       return await apiService.get<Product[]>('/products/getProductsInStock');
     } catch (error) {
       throw new Error(error instanceof Error ? error.message : 'Failed to fetch products in stock');
+    }
+  }
+
+  async getCategories(): Promise<string[]> {
+    try {
+      return await apiService.get<string[]>('/products/getCategories');
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : 'Failed to fetch categories');
     }
   }
 

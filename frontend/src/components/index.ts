@@ -11,4 +11,5 @@ export { default as CartItem } from './CartItem';
 export { default as WishlistItem } from './WishlistItem';
 export { default as OrderItem } from './OrderItem';
 export { default as UserProfile } from './UserProfile';
-export { default as AdminDashboard } from './AdminDashboard'; 
+export { default as AdminDashboard } from './AdminDashboard';
+export { default as ProtectedRoute } from './ProtectedRoute'; 

@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, Button } from '../components';
+import { adminService, productService, orderService, userService } from '../services';
 
 interface AdminStats {
   totalProducts: number;
@@ -68,21 +69,22 @@ interface Product {
 
 interface Order {
   id: string;
-  customerName: string;
-  customerEmail: string;
   totalAmount: number;
   status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
   items: OrderItem[];
   createdAt: Date;
-  updatedAt: Date;
+  orderNumber?: string;
+  shippingAddress?: string;
+  paymentMethod?: string;
 }
 
 interface OrderItem {
-  id: string;
+  id: number;
+  productId: number;
   productName: string;
   quantity: number;
   price: number;
-  total: number;
+  imageUrl: string;
 }
 
 const AdminPage: React.FC = () => {
@@ -92,6 +94,32 @@ const AdminPage: React.FC = () => {
   const [showAddProductModal, setShowAddProductModal] = useState(false);
   const [showEditProductModal, setShowEditProductModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [currentAdmin, setCurrentAdmin] = useState<any>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  
+  // Real data states
+  const [products, setProducts] = useState<Product[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [customers, setCustomers] = useState<CustomerUser[]>([]);
+  const [admins, setAdmins] = useState<AdminUser[]>([]);
+  const [stats, setStats] = useState<AdminStats>({
+    totalProducts: 0,
+    totalOrders: 0,
+    totalRevenue: 0,
+    totalCustomers: 0,
+    pendingOrders: 0,
+    lowStockItems: 0,
+    totalAdmins: 0
+  });
+  
+  // Loading states
+  const [loading, setLoading] = useState(true);
+  const [productsLoading, setProductsLoading] = useState(false);
+  const [ordersLoading, setOrdersLoading] = useState(false);
+  const [customersLoading, setCustomersLoading] = useState(false);
+  const [adminsLoading, setAdminsLoading] = useState(false);
+  const [updatingProduct, setUpdatingProduct] = useState(false);
+
   const [newAdmin, setNewAdmin] = useState({
     name: '',
     email: '',
@@ -112,248 +140,10 @@ const AdminPage: React.FC = () => {
     weight: 0,
     dimensions: '',
     specifications: '',
-    tags: ''
+    tags: '',
+    rating: 0,
+    reviewCount: 0
   });
-
-  // Mock product data
-  const [products, setProducts] = useState<Product[]>([
-    {
-      id: 1,
-      name: "Premium Juniper Bonsai",
-      category: "Trees",
-      price: 189.99,
-      description: "A stunning 5-year-old Juniper bonsai with intricate branch structure",
-      imageUrl: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600",
-      stock: 15,
-      available: true,
-      brand: "BonsaiMaster",
-      sku: "JUN-001",
-      weight: 2.5,
-      dimensions: "12\" x 8\" x 6\"",
-      specifications: "Age: 5 years\nHeight: 12 inches\nPot: Unglazed ceramic",
-      rating: 4.8,
-      reviewCount: 127,
-      tags: "juniper,bonsai,outdoor",
-      createdAt: new Date('2023-01-15'),
-      updatedAt: new Date('2024-01-15')
-    },
-    {
-      id: 2,
-      name: "Japanese Maple Bonsai",
-      category: "Trees",
-      price: 249.99,
-      description: "Beautiful red-leaved maple perfect for autumn display",
-      imageUrl: "https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=600",
-      stock: 8,
-      available: true,
-      brand: "BonsaiMaster",
-      sku: "MAP-002",
-      weight: 3.2,
-      dimensions: "14\" x 10\" x 7\"",
-      specifications: "Age: 7 years\nHeight: 14 inches\nPot: Glazed ceramic",
-      rating: 4.9,
-      reviewCount: 89,
-      tags: "maple,bonsai,autumn",
-      createdAt: new Date('2023-02-20'),
-      updatedAt: new Date('2024-01-14')
-    },
-    {
-      id: 3,
-      name: "Bonsai Pruning Shears",
-      category: "Tools",
-      price: 45.99,
-      description: "Professional-grade stainless steel shears",
-      imageUrl: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=600",
-      stock: 50,
-      available: true,
-      brand: "BonsaiTools",
-      sku: "TOOL-003",
-      weight: 0.5,
-      dimensions: "8\" x 2\" x 1\"",
-      specifications: "Material: Stainless steel\nLength: 8 inches\nWeight: 0.5 lbs",
-      rating: 4.8,
-      reviewCount: 189,
-      tags: "tools,pruning,shears",
-      createdAt: new Date('2023-03-10'),
-      updatedAt: new Date('2024-01-13')
-    }
-  ]);
-
-  // Mock admin data
-  const stats: AdminStats = {
-    totalProducts: 156,
-    totalOrders: 892,
-    totalRevenue: 45678.90,
-    totalCustomers: 234,
-    pendingOrders: 23,
-    lowStockItems: 8,
-    totalAdmins: 5
-  };
-
-  const adminUsers: AdminUser[] = [
-    {
-      id: 'ADM-001',
-      name: 'John Admin',
-      email: 'john.admin@bonsaimarket.com',
-      role: 'super_admin',
-      status: 'active',
-      createdAt: '2023-01-15',
-      lastLogin: '2024-01-15 10:30',
-      permissions: ['all']
-    },
-    {
-      id: 'ADM-002',
-      name: 'Sarah Manager',
-      email: 'sarah.manager@bonsaimarket.com',
-      role: 'admin',
-      status: 'active',
-      createdAt: '2023-03-20',
-      lastLogin: '2024-01-14 15:45',
-      permissions: ['products', 'orders', 'customers']
-    },
-    {
-      id: 'ADM-003',
-      name: 'Mike Moderator',
-      email: 'mike.moderator@bonsaimarket.com',
-      role: 'moderator',
-      status: 'active',
-      createdAt: '2023-06-10',
-      lastLogin: '2024-01-13 09:15',
-      permissions: ['orders', 'customers']
-    },
-    {
-      id: 'ADM-004',
-      name: 'Lisa Support',
-      email: 'lisa.support@bonsaimarket.com',
-      role: 'admin',
-      status: 'inactive',
-      createdAt: '2023-08-05',
-      lastLogin: '2024-01-10 14:20',
-      permissions: ['customers', 'orders']
-    },
-    {
-      id: 'ADM-005',
-      name: 'David Analyst',
-      email: 'david.analyst@bonsaimarket.com',
-      role: 'admin',
-      status: 'active',
-      createdAt: '2023-11-12',
-      lastLogin: '2024-01-15 11:00',
-      permissions: ['analytics', 'reports']
-    }
-  ];
-
-  const customerUsers: CustomerUser[] = [
-    {
-      id: 'CUST-001',
-      name: 'Alice Johnson',
-      email: 'alice.johnson@email.com',
-      phone: '+1 (555) 123-4567',
-      createdAt: '2023-02-15',
-      lastLogin: '2024-01-15 12:30',
-      totalOrders: 8,
-      totalSpent: 1245.67,
-      wishlistItems: 3,
-      status: 'active'
-    },
-    {
-      id: 'CUST-002',
-      name: 'Bob Smith',
-      email: 'bob.smith@email.com',
-      phone: '+1 (555) 234-5678',
-      createdAt: '2023-04-20',
-      lastLogin: '2024-01-14 16:45',
-      totalOrders: 12,
-      totalSpent: 2890.45,
-      wishlistItems: 7,
-      status: 'active'
-    },
-    {
-      id: 'CUST-003',
-      name: 'Carol Davis',
-      email: 'carol.davis@email.com',
-      phone: '+1 (555) 345-6789',
-      createdAt: '2023-06-10',
-      lastLogin: '2024-01-13 09:15',
-      totalOrders: 3,
-      totalSpent: 456.78,
-      wishlistItems: 2,
-      status: 'active'
-    },
-    {
-      id: 'CUST-004',
-      name: 'David Wilson',
-      email: 'david.wilson@email.com',
-      phone: '+1 (555) 456-7890',
-      createdAt: '2023-08-05',
-      lastLogin: '2024-01-10 14:20',
-      totalOrders: 0,
-      totalSpent: 0,
-      wishlistItems: 5,
-      status: 'inactive'
-    },
-    {
-      id: 'CUST-005',
-      name: 'Eva Brown',
-      email: 'eva.brown@email.com',
-      phone: '+1 (555) 567-8901',
-      createdAt: '2023-11-12',
-      lastLogin: '2024-01-15 11:00',
-      totalOrders: 15,
-      totalSpent: 3456.89,
-      wishlistItems: 1,
-      status: 'active'
-    }
-  ];
-
-  const recentOrders: RecentOrder[] = [
-    { id: '#ORD-001', customer: 'John Doe', product: 'Premium Juniper Bonsai', amount: 189.99, status: 'pending', date: '2024-01-15' },
-    { id: '#ORD-002', customer: 'Jane Smith', product: 'Japanese Maple Bonsai', amount: 249.99, status: 'shipped', date: '2024-01-14' },
-    { id: '#ORD-003', customer: 'Mike Johnson', product: 'Bonsai Pruning Shears', amount: 45.99, status: 'delivered', date: '2024-01-13' },
-    { id: '#ORD-004', customer: 'Sarah Wilson', product: 'Ceramic Bonsai Pot', amount: 34.99, status: 'cancelled', date: '2024-01-12' },
-    { id: '#ORD-005', customer: 'David Brown', product: 'Ficus Bonsai Tree', amount: 159.99, status: 'pending', date: '2024-01-11' }
-  ];
-
-  // Mock order data
-  const [orders, setOrders] = useState<Order[]>([
-    {
-      id: "ORD-001",
-      customerName: "John Doe",
-      customerEmail: "john.doe@email.com",
-      totalAmount: 235.98,
-      status: "pending",
-      items: [
-        { id: "1", productName: "Premium Juniper Bonsai", quantity: 1, price: 189.99, total: 189.99 },
-        { id: "2", productName: "Bonsai Pruning Shears", quantity: 1, price: 45.99, total: 45.99 }
-      ],
-      createdAt: new Date('2024-01-15'),
-      updatedAt: new Date('2024-01-15')
-    },
-    {
-      id: "ORD-002",
-      customerName: "Jane Smith",
-      customerEmail: "jane.smith@email.com",
-      totalAmount: 249.99,
-      status: "shipped",
-      items: [
-        { id: "3", productName: "Japanese Maple Bonsai", quantity: 1, price: 249.99, total: 249.99 }
-      ],
-      createdAt: new Date('2024-01-14'),
-      updatedAt: new Date('2024-01-14')
-    },
-    {
-      id: "ORD-003",
-      customerName: "Mike Johnson",
-      customerEmail: "mike.johnson@email.com",
-      totalAmount: 45.99,
-      status: "delivered",
-      items: [
-        { id: "4", productName: "Bonsai Pruning Shears", quantity: 1, price: 45.99, total: 45.99 }
-      ],
-      createdAt: new Date('2024-01-13'),
-      updatedAt: new Date('2024-01-13')
-    }
-  ]);
 
   const handleOrderStatusChange = (orderId: string, newStatus: Order['status']) => {
     setOrders(orders.map(order => 
@@ -362,6 +152,136 @@ const AdminPage: React.FC = () => {
         : order
     ));
   };
+
+  // Data fetching functions
+  const fetchProducts = async () => {
+    try {
+      setProductsLoading(true);
+      const allProducts = await productService.getAllProducts();
+      setProducts(allProducts);
+    } catch (error) {
+      console.error('Failed to fetch products:', error);
+    } finally {
+      setProductsLoading(false);
+    }
+  };
+
+  const fetchOrders = async () => {
+    try {
+      setOrdersLoading(true);
+      const allOrders = await orderService.getAllOrders();
+      setOrders(allOrders);
+    } catch (error) {
+      console.error('Failed to fetch orders:', error);
+    } finally {
+      setOrdersLoading(false);
+    }
+  };
+
+  const fetchCustomers = async () => {
+    try {
+      setCustomersLoading(true);
+      const allCustomers = await userService.getAllUsers();
+      // Map UserProfile to CustomerUser interface
+      const mappedCustomers: CustomerUser[] = allCustomers.map(user => ({
+        id: `CUST-${user.id}`,
+        name: `${user.firstName} ${user.lastName}`,
+        email: user.email,
+        phone: user.phoneNumber || 'N/A',
+        createdAt: user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'Unknown',
+        lastLogin: 'Unknown', // This would need a separate API call
+        totalOrders: 0, // This would need a separate API call
+        totalSpent: 0, // This would need a separate API call
+        wishlistItems: 0, // This would need a separate API call
+        status: 'active' as const
+      }));
+      setCustomers(mappedCustomers);
+    } catch (error) {
+      console.error('Failed to fetch customers:', error);
+    } finally {
+      setCustomersLoading(false);
+    }
+  };
+
+  const fetchAdmins = async () => {
+    try {
+      setAdminsLoading(true);
+      const allAdmins = await adminService.getAllAdmins();
+      // Map AdminResponse to AdminUser interface
+      const mappedAdmins: AdminUser[] = allAdmins.map(admin => ({
+        id: `ADM-${admin.id}`,
+        name: admin.name,
+        email: admin.email,
+        role: admin.role as 'super_admin' | 'admin' | 'moderator',
+        status: admin.isActive ? 'active' : 'inactive',
+        createdAt: admin.createdAt ? new Date(admin.createdAt).toLocaleDateString() : 'Unknown',
+        lastLogin: admin.lastLoginAt ? new Date(admin.lastLoginAt).toLocaleString() : 'Never',
+        permissions: [] // This would need a separate API call
+      }));
+      setAdmins(mappedAdmins);
+    } catch (error) {
+      console.error('Failed to fetch admins:', error);
+    } finally {
+      setAdminsLoading(false);
+    }
+  };
+
+  const calculateStats = () => {
+    const totalProducts = products.length;
+    const totalOrders = orders.length;
+    const totalRevenue = orders.reduce((sum, order) => sum + order.totalAmount, 0);
+    const totalCustomers = customers.length;
+    const pendingOrders = orders.filter(order => order.status === 'pending').length;
+    const lowStockItems = products.filter(product => product.stock < 10).length;
+    const totalAdmins = admins.length;
+
+    setStats({
+      totalProducts,
+      totalOrders,
+      totalRevenue,
+      totalCustomers,
+      pendingOrders,
+      lowStockItems,
+      totalAdmins
+    });
+  };
+
+  // Fetch all data when component mounts or tab changes
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchProducts();
+      fetchOrders();
+      fetchCustomers();
+      fetchAdmins();
+    }
+  }, [isAuthenticated]);
+
+  // Calculate stats when data changes
+  useEffect(() => {
+    if (products.length > 0 || orders.length > 0 || customers.length > 0 || admins.length > 0) {
+      calculateStats();
+    }
+  }, [products, orders, customers, admins]);
+
+  // Fetch data based on active tab
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    switch (activeTab) {
+      case 'products':
+        fetchProducts();
+        break;
+      case 'orders':
+        fetchOrders();
+        break;
+      case 'customers':
+        fetchCustomers();
+        break;
+      case 'admins':
+        fetchAdmins();
+        break;
+    }
+  }, [activeTab, isAuthenticated]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -401,6 +321,28 @@ const AdminPage: React.FC = () => {
     }
   };
 
+  // Utility function to safely format prices
+  const formatPrice = (price: any): string => {
+    if (typeof price === 'string') {
+      const numPrice = parseFloat(price);
+      return isNaN(numPrice) ? '0.00' : numPrice.toFixed(2);
+    } else if (typeof price === 'number') {
+      return price.toFixed(2);
+    }
+    return '0.00';
+  };
+
+  // Utility function to safely format dates
+  const formatDate = (date: any): string => {
+    if (date instanceof Date) {
+      return date.toLocaleDateString();
+    } else if (typeof date === 'string') {
+      const parsedDate = new Date(date);
+      return isNaN(parsedDate.getTime()) ? 'Invalid Date' : parsedDate.toLocaleDateString();
+    }
+    return 'Invalid Date';
+  };
+
   const handleAddAdmin = () => {
     // Mock function to add admin
     alert(`Admin ${newAdmin.name} added successfully!`);
@@ -408,64 +350,210 @@ const AdminPage: React.FC = () => {
     setNewAdmin({ name: '', email: '', role: 'admin', permissions: [] });
   };
 
+  // Handle product update with database integration
+  const handleUpdateProduct = async () => {
+    if (!selectedProduct) return;
+    
+    try {
+      setUpdatingProduct(true);
+      
+      // Prepare update data (exclude protected fields)
+      const updateData = {
+        name: newProduct.name,
+        category: newProduct.category,
+        price: newProduct.price,
+        description: newProduct.description,
+        stock: newProduct.stock,
+        available: newProduct.available,
+        brand: newProduct.brand,
+        sku: newProduct.sku,
+        weight: newProduct.weight,
+        dimensions: newProduct.dimensions,
+        specifications: newProduct.specifications,
+        tags: newProduct.tags
+      };
+
+      // Call backend API to update product
+      const updatedProduct = await productService.updateProduct(selectedProduct.id, updateData);
+      
+      // Update local state with the response from backend
+      const updatedProducts = products.map(p => 
+        p.id === selectedProduct.id ? updatedProduct : p
+      );
+      setProducts(updatedProducts);
+      
+      // Close modal and reset form
+      setShowEditProductModal(false);
+      setSelectedProduct(null);
+      setNewProduct({ name: '', category: '', price: 0, description: '', imageUrl: '', stock: 0, available: true, brand: '', sku: '', weight: 0, dimensions: '', specifications: '', tags: '', rating: 0, reviewCount: 0 });
+      
+      // Show success message
+      alert('Product updated successfully in database!');
+      
+    } catch (error) {
+      console.error('Failed to update product:', error);
+      alert(`Failed to update product: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setUpdatingProduct(false);
+    }
+  };
+
+  // Handle product creation with database integration
+  const handleCreateProduct = async () => {
+    try {
+      setUpdatingProduct(true);
+      
+      // Prepare create data
+      const createData = {
+        name: newProduct.name,
+        category: newProduct.category,
+        price: newProduct.price,
+        description: newProduct.description,
+        stock: newProduct.stock,
+        available: newProduct.available,
+        brand: newProduct.brand,
+        sku: newProduct.sku,
+        weight: newProduct.weight,
+        dimensions: newProduct.dimensions,
+        specifications: newProduct.specifications,
+        tags: newProduct.tags
+      };
+
+      // Call backend API to create product
+      const createdProduct = await productService.createProduct(createData);
+      
+      // Add new product to local state
+      setProducts([...products, createdProduct]);
+      
+      // Close modal and reset form
+      setShowAddProductModal(false);
+      setNewProduct({ name: '', category: '', price: 0, description: '', imageUrl: '', stock: 0, available: true, brand: '', sku: '', weight: 0, dimensions: '', specifications: '', tags: '', rating: 0, reviewCount: 0 });
+      
+      // Show success message
+      alert('Product created successfully in database!');
+      
+    } catch (error) {
+      console.error('Failed to create product:', error);
+      alert(`Failed to create product: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setUpdatingProduct(false);
+    }
+  };
+
+  // Check authentication on component mount
+  useEffect(() => {
+    const checkAuth = () => {
+      const adminAuth = adminService.isAdminAuthenticated();
+      if (!adminAuth) {
+        navigate('/login');
+        return;
+      }
+      
+      setIsAuthenticated(true);
+      const admin = adminService.getCurrentAdmin();
+      setCurrentAdmin(admin);
+    };
+
+    checkAuth();
+  }, [navigate]);
+
+  // Handle logout
+  const handleLogout = async () => {
+    try {
+      await adminService.logoutAdmin();
+      setIsAuthenticated(false);
+      setCurrentAdmin(null);
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Force logout even if there's an error
+      localStorage.removeItem('adminToken');
+      localStorage.removeItem('admin');
+      setIsAuthenticated(false);
+      setCurrentAdmin(null);
+      navigate('/login');
+    }
+  };
+
+  // If not authenticated, show loading
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+          <p className="text-green-600 text-lg">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      {/* Admin Header */}
-      <header className="bg-white shadow-lg border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
+    <div className="min-h-screen bg-gray-50">
+      {/* Header with Admin Info and Logout */}
+      <div className="bg-white shadow-sm border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-4">
             <div className="flex items-center space-x-4">
-              <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-3 rounded-xl">
-                <span className="text-2xl text-white">👨‍💼</span>
+              <div className="bg-gradient-to-br from-green-500 to-emerald-600 p-2 rounded-lg">
+                <span className="text-2xl">🛡️</span>
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-800">Admin Dashboard</h1>
-                <p className="text-gray-600">Manage your BonsaiMarket store</p>
+                <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+                <p className="text-sm text-gray-600">
+                  Welcome back, {currentAdmin?.name || 'Admin'} ({currentAdmin?.role || 'admin'})
+                </p>
               </div>
             </div>
+            
             <div className="flex items-center space-x-4">
-              <button 
-                onClick={() => navigate('/')}
-                className="text-gray-600 hover:text-gray-800 transition-colors"
-              >
-                ← Back to Store
-              </button>
-              <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full flex items-center justify-center text-white font-semibold">
-                A
+              <div className="text-right">
+                <p className="text-sm text-gray-600">Last login</p>
+                <p className="text-xs text-gray-500">
+                  {currentAdmin?.lastLoginAt ? new Date(currentAdmin.lastLoginAt).toLocaleString() : 'Unknown'}
+                </p>
               </div>
+              <Button
+                variant="secondary"
+                onClick={handleLogout}
+                className="bg-red-600 hover:bg-red-700 text-white border-red-600"
+              >
+                🚪 Logout
+              </Button>
             </div>
           </div>
         </div>
-      </header>
+      </div>
 
-      {/* <div className="w-full px-6 py-8"> */}
-      <div className="max-w-8xl mx-auto px-6 py-8">
-
-        {/* Navigation Tabs */}
-        <div className="flex space-x-1 bg-white rounded-xl p-2 shadow-sm mb-8 overflow-x-auto">
-          {[
-            { id: 'dashboard', label: 'Dashboard', icon: '📊' },
-            { id: 'admins', label: 'Admins', icon: '👨‍💼' },
-            { id: 'customers', label: 'Customers', icon: '👥' },
-            { id: 'products', label: 'Products', icon: '🌳' },
-            { id: 'orders', label: 'Orders', icon: '📦' },
-            { id: 'analytics', label: 'Analytics', icon: '📈' },
-            { id: 'settings', label: 'Settings', icon: '⚙️' }
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center space-x-2 px-4 py-3 rounded-lg font-medium transition-all duration-200 whitespace-nowrap ${
-                activeTab === tab.id
-                  ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg'
-                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
-              }`}
-            >
-              <span>{tab.icon}</span>
-              <span>{tab.label}</span>
-            </button>
-          ))}
+      {/* Navigation Tabs */}
+      <div className="bg-white shadow-sm border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <nav className="flex space-x-8">
+            {[
+              { id: 'dashboard', label: '📊 Dashboard', icon: '📊' },
+              { id: 'products', label: '🌱 Products', icon: '🌱' },
+              { id: 'orders', label: '📦 Orders', icon: '📦' },
+              { id: 'customers', label: '👥 Customers', icon: '👥' },
+              { id: 'admins', label: '🛡️ Admins', icon: '🛡️' },
+              { id: 'analytics', label: '📈 Analytics', icon: '📈' }
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                  activeTab === tab.id
+                    ? 'border-green-500 text-green-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </nav>
         </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
         {/* Dashboard Content */}
         {activeTab === 'dashboard' && (
@@ -476,7 +564,9 @@ const AdminPage: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-blue-100 text-sm font-medium">Total Products</p>
-                    <p className="text-3xl font-bold">{stats.totalProducts}</p>
+                    <p className="text-3xl font-bold">
+                      {loading ? '...' : stats.totalProducts}
+                    </p>
                     <p className="text-blue-200 text-xs">+12% from last month</p>
                   </div>
                   <div className="text-4xl">🌳</div>
@@ -487,7 +577,9 @@ const AdminPage: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-green-100 text-sm font-medium">Total Revenue</p>
-                    <p className="text-3xl font-bold">৳{stats.totalRevenue.toLocaleString()}</p>
+                    <p className="text-3xl font-bold">
+                      {loading ? '...' : `৳${stats.totalRevenue.toLocaleString()}`}
+                    </p>
                     <p className="text-green-200 text-xs">+8% from last month</p>
                   </div>
                   <div className="text-4xl">💰</div>
@@ -498,7 +590,9 @@ const AdminPage: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-purple-100 text-sm font-medium">Total Customers</p>
-                    <p className="text-3xl font-bold">{stats.totalCustomers}</p>
+                    <p className="text-3xl font-bold">
+                      {loading ? '...' : stats.totalCustomers}
+                    </p>
                     <p className="text-purple-200 text-xs">+15% from last month</p>
                   </div>
                   <div className="text-4xl">👥</div>
@@ -509,7 +603,9 @@ const AdminPage: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-orange-100 text-sm font-medium">Total Admins</p>
-                    <p className="text-3xl font-bold">{stats.totalAdmins}</p>
+                    <p className="text-3xl font-bold">
+                      {loading ? '...' : stats.totalAdmins}
+                    </p>
                     <p className="text-orange-200 text-xs">+1 from last month</p>
                   </div>
                   <div className="text-4xl">👨‍💼</div>
@@ -589,14 +685,16 @@ const AdminPage: React.FC = () => {
                     {orders.slice(0, 5).map((order) => (
                       <tr key={order.id} className="border-b border-gray-100 hover:bg-gray-50">
                         <td className="py-4 px-6 font-medium text-gray-800">{order.id}</td>
-                        <td className="py-4 px-6 text-gray-600">{order.customerName}</td>
-                        <td className="py-4 px-6 font-semibold text-gray-800">৳{order.totalAmount.toFixed(2)}</td>
+                        <td className="py-4 px-6 text-gray-600">
+                          {order.items.length > 0 ? order.items[0].productName : 'N/A'}
+                        </td>
+                        <td className="py-4 px-6 font-semibold text-gray-800">৳{formatPrice(order.totalAmount)}</td>
                         <td className="py-4 px-6">
                           <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}>
                             {getStatusIcon(order.status)} {order.status}
                           </span>
                         </td>
-                        <td className="py-4 px-6 text-gray-600">{order.createdAt.toLocaleDateString()}</td>
+                        <td className="py-4 px-6 text-gray-600">{formatDate(order.createdAt)}</td>
                         <td className="py-4 px-6">
                           <Button variant="secondary" size="small">View</Button>
                         </td>
@@ -639,7 +737,7 @@ const AdminPage: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {adminUsers.map((admin) => (
+                    {admins.map((admin) => (
                       <tr key={admin.id} className="border-b border-gray-100 hover:bg-gray-50">
                         <td className="py-4 px-6 font-medium text-gray-800">{admin.id}</td>
                         <td className="py-4 px-6 text-gray-800 font-medium">{admin.name}</td>
@@ -704,7 +802,7 @@ const AdminPage: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {customerUsers.map((customer) => (
+                    {customers.map((customer) => (
                       <tr key={customer.id} className="border-b border-gray-100 hover:bg-gray-50">
                         <td className="py-4 px-6 font-medium text-gray-800">{customer.id}</td>
                         <td className="py-4 px-6 text-gray-800 font-medium">{customer.name}</td>
@@ -758,47 +856,82 @@ const AdminPage: React.FC = () => {
 
             <div className="bg-white rounded-xl shadow-lg overflow-hidden">
               <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-gray-200 bg-gray-50">
-                      <th className="text-left py-4 px-6 font-semibold text-gray-700">ID</th>
-                      <th className="text-left py-4 px-6 font-semibold text-gray-700">Name</th>
-                      <th className="text-left py-4 px-6 font-semibold text-gray-700">Category</th>
-                      <th className="text-left py-4 px-6 font-semibold text-gray-700">Price</th>
-                      <th className="text-left py-4 px-6 font-semibold text-gray-700">Stock</th>
-                      <th className="text-left py-4 px-6 font-semibold text-gray-700">Available</th>
-                      <th className="text-left py-4 px-6 font-semibold text-gray-700">Created</th>
-                      <th className="text-left py-4 px-6 font-semibold text-gray-700">Updated</th>
-                      <th className="text-left py-4 px-6 font-semibold text-gray-700">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {products.map((product) => (
-                      <tr key={product.id} className="border-b border-gray-100 hover:bg-gray-50">
-                        <td className="py-4 px-6 font-medium text-gray-800">{product.id}</td>
-                        <td className="py-4 px-6 text-gray-800 font-medium">{product.name}</td>
-                        <td className="py-4 px-6 text-gray-600">{product.category}</td>
-                        <td className="py-4 px-6 font-semibold text-gray-800">৳{product.price.toFixed(2)}</td>
-                        <td className="py-4 px-6 text-gray-800 font-medium">{product.stock}</td>
-                        <td className="py-4 px-6">
-                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                            product.available ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                          }`}>
-                            {product.available ? '✅ Available' : '❌ Out of Stock'}
-                          </span>
-                        </td>
-                        <td className="py-4 px-6 text-gray-600">{product.createdAt.toLocaleDateString()}</td>
-                        <td className="py-4 px-6 text-gray-600">{product.updatedAt.toLocaleDateString()}</td>
-                        <td className="py-4 px-6">
-                          <div className="flex space-x-2">
-                            <Button variant="secondary" size="small" onClick={() => setSelectedProduct(product)}>Edit</Button>
-                            <Button variant="secondary" size="small">View</Button>
-                          </div>
-                        </td>
+                {productsLoading ? (
+                  <div className="p-8 text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+                    <p className="text-gray-600">Loading products...</p>
+                  </div>
+                ) : (
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-gray-200 bg-gray-50">
+                        <th className="text-left py-4 px-6 font-semibold text-gray-700">ID</th>
+                        <th className="text-left py-4 px-6 font-semibold text-gray-700">Name</th>
+                        <th className="text-left py-4 px-6 font-semibold text-gray-700">Category</th>
+                        <th className="text-left py-4 px-6 font-semibold text-gray-700">Price</th>
+                        <th className="text-left py-4 px-6 font-semibold text-gray-700">Stock</th>
+                        <th className="text-left py-4 px-6 font-semibold text-gray-700">Available</th>
+                        <th className="text-left py-4 px-6 font-semibold text-gray-700">Created</th>
+                        <th className="text-left py-4 px-6 font-semibold text-gray-700">Actions</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {products.length === 0 ? (
+                        <tr>
+                          <td colSpan={8} className="text-center py-8 text-gray-500">
+                            No products found
+                          </td>
+                        </tr>
+                      ) : (
+                        products.map((product) => (
+                          <tr key={product.id} className="border-b border-gray-100 hover:bg-gray-50">
+                            <td className="py-4 px-6 font-medium text-gray-800">{product.id}</td>
+                            <td className="py-4 px-6 text-gray-800 font-medium">{product.name}</td>
+                            <td className="py-4 px-6 text-gray-600">{product.category}</td>
+                            <td className="py-4 px-6 font-semibold text-gray-800">
+                              ৳{formatPrice(product.price)}
+                            </td>
+                            <td className="py-4 px-6 text-gray-800 font-medium">{product.stock}</td>
+                            <td className="py-4 px-6">
+                              <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                                product.available ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                              }`}>
+                                {product.available ? '✅ Available' : '❌ Out of Stock'}
+                              </span>
+                            </td>
+                            <td className="py-4 px-6 text-gray-600">{formatDate(product.createdAt)}</td>
+                            <td className="py-4 px-6">
+                              <div className="flex space-x-2">
+                                <Button variant="secondary" size="small" onClick={() => {
+                                  setSelectedProduct(product);
+                                  setNewProduct({
+                                    name: product.name,
+                                    category: product.category,
+                                    price: product.price,
+                                    description: product.description || '',
+                                    imageUrl: product.imageUrl || '',
+                                    stock: product.stock,
+                                    available: product.available,
+                                    brand: product.brand || '',
+                                    sku: product.sku || '',
+                                    weight: product.weight || 0,
+                                    dimensions: product.dimensions || '',
+                                    specifications: product.specifications || '',
+                                    tags: product.tags || '',
+                                    rating: product.rating,
+                                    reviewCount: product.reviewCount
+                                  });
+                                  setShowEditProductModal(true);
+                                }}>Edit</Button>
+                                <Button variant="secondary" size="small">View</Button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                )}
               </div>
             </div>
           </div>
@@ -835,8 +968,10 @@ const AdminPage: React.FC = () => {
                     {orders.map((order) => (
                       <tr key={order.id} className="border-b border-gray-100 hover:bg-gray-50">
                         <td className="py-4 px-6 font-medium text-gray-800">{order.id}</td>
-                        <td className="py-4 px-6 text-gray-600">{order.customerName}</td>
-                        <td className="py-4 px-6 font-semibold text-gray-800">৳{order.totalAmount.toFixed(2)}</td>
+                        <td className="py-4 px-6 text-gray-600">
+                          {order.items.length > 0 ? order.items[0].productName : 'N/A'}
+                        </td>
+                        <td className="py-4 px-6 font-semibold text-gray-800">৳{formatPrice(order.totalAmount)}</td>
                         <td className="py-4 px-6">
                           <select
                             value={order.status}
@@ -850,8 +985,8 @@ const AdminPage: React.FC = () => {
                             <option value="cancelled">Cancelled</option>
                           </select>
                         </td>
-                        <td className="py-4 px-6 text-gray-600">{order.createdAt.toLocaleDateString()}</td>
-                        <td className="py-4 px-6 text-gray-600">{order.updatedAt.toLocaleDateString()}</td>
+                        <td className="py-4 px-6 text-gray-600">{formatDate(order.createdAt)}</td>
+                        <td className="py-4 px-6 text-gray-600">{formatDate(order.createdAt)}</td>
                         <td className="py-4 px-6">
                           <div className="flex space-x-2">
                             <Button variant="secondary" size="small">View</Button>
@@ -1005,35 +1140,18 @@ const AdminPage: React.FC = () => {
             <div className="flex space-x-3 mt-6">
               <Button 
                 variant="primary" 
-                onClick={() => {
-                  const newId = Math.max(...products.map(p => p.id)) + 1;
-                  const newProductData = {
-                    id: newId,
-                    name: newProduct.name,
-                    category: newProduct.category,
-                    price: newProduct.price,
-                    description: '', // Placeholder
-                    imageUrl: '', // Placeholder
-                    stock: newProduct.stock,
-                    available: newProduct.available,
-                    brand: '', // Placeholder
-                    sku: '', // Placeholder
-                    weight: 0, // Placeholder
-                    dimensions: '', // Placeholder
-                    specifications: '', // Placeholder
-                    rating: 0, // Placeholder
-                    reviewCount: 0, // Placeholder
-                    tags: '', // Placeholder
-                    createdAt: new Date(),
-                    updatedAt: new Date()
-                  };
-                  setProducts([...products, newProductData]);
-                  setShowAddProductModal(false);
-                  setNewProduct({ name: '', category: '', price: 0, description: '', imageUrl: '', stock: 0, available: true, brand: '', sku: '', weight: 0, dimensions: '', specifications: '', tags: '' });
-                }}
-                className="flex-1 bg-gradient-to-r from-green-500 to-green-600"
+                onClick={handleCreateProduct}
+                disabled={updatingProduct}
+                className="flex-1 bg-gradient-to-r from-green-500 to-green-600 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Add Product
+                {updatingProduct ? (
+                  <div className="flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                    Creating...
+                  </div>
+                ) : (
+                  'Add Product'
+                )}
               </Button>
               <Button 
                 variant="secondary" 
@@ -1050,87 +1168,261 @@ const AdminPage: React.FC = () => {
       {/* Edit Product Modal */}
       {showEditProductModal && selectedProduct && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md">
-            <h3 className="text-xl font-bold text-gray-800 mb-4">✏️ Edit Product</h3>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
-                <input
-                  type="text"
-                  value={newProduct.name}
-                  onChange={(e) => setNewProduct({...newProduct, name: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter product name"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                <input
-                  type="text"
-                  value={newProduct.category}
-                  onChange={(e) => setNewProduct({...newProduct, category: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter product category"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Price</label>
-                <input
-                  type="number"
-                  value={newProduct.price}
-                  onChange={(e) => setNewProduct({...newProduct, price: parseFloat(e.target.value)})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter product price"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Stock</label>
-                <input
-                  type="number"
-                  value={newProduct.stock}
-                  onChange={(e) => setNewProduct({...newProduct, stock: parseInt(e.target.value, 10)})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter product stock"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Available</label>
-                <select
-                  value={newProduct.available ? 'true' : 'false'}
-                  onChange={(e) => setNewProduct({...newProduct, available: e.target.value === 'true'})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="true">Yes</option>
-                  <option value="false">No</option>
-                </select>
-              </div>
-            </div>
-            <div className="flex space-x-3 mt-6">
-              <Button 
-                variant="primary" 
+          <div className="bg-white rounded-xl p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-2xl font-bold text-gray-800">✏️ Edit Product</h3>
+              <button
                 onClick={() => {
-                  const updatedProducts = products.map(p => 
-                    p.id === selectedProduct.id ? { ...p, ...newProduct, updatedAt: new Date() } : p
-                  );
-                  setProducts(updatedProducts);
                   setShowEditProductModal(false);
                   setSelectedProduct(null);
-                  setNewProduct({ name: '', category: '', price: 0, description: '', imageUrl: '', stock: 0, available: true, brand: '', sku: '', weight: 0, dimensions: '', specifications: '', tags: '' });
+                  setNewProduct({ name: '', category: '', price: 0, description: '', imageUrl: '', stock: 0, available: true, brand: '', sku: '', weight: 0, dimensions: '', specifications: '', tags: '', rating: 0, reviewCount: 0 });
                 }}
-                className="flex-1 bg-gradient-to-r from-yellow-500 to-yellow-600"
+                className="text-gray-400 hover:text-gray-600 text-2xl"
               >
-                Save Changes
+                ×
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Left Column */}
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Product ID (Read-only)</label>
+                  <input
+                    type="text"
+                    value={selectedProduct.id}
+                    disabled
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Product Name *</label>
+                  <input
+                    type="text"
+                    value={newProduct.name}
+                    onChange={(e) => setNewProduct({...newProduct, name: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Enter product name"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Category *</label>
+                  <input
+                    type="text"
+                    value={newProduct.category}
+                    onChange={(e) => setNewProduct({...newProduct, category: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Enter product category"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Price (৳) *</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={newProduct.price}
+                    onChange={(e) => setNewProduct({...newProduct, price: parseFloat(e.target.value) || 0})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="0.00"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Stock Quantity *</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={newProduct.stock}
+                    onChange={(e) => setNewProduct({...newProduct, stock: parseInt(e.target.value) || 0})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="0"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Brand</label>
+                  <input
+                    type="text"
+                    value={newProduct.brand}
+                    onChange={(e) => setNewProduct({...newProduct, brand: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Enter product brand"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">SKU</label>
+                  <input
+                    type="text"
+                    value={newProduct.sku}
+                    onChange={(e) => setNewProduct({...newProduct, sku: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Enter product SKU"
+                  />
+                </div>
+              </div>
+
+              {/* Right Column */}
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Weight (kg)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={newProduct.weight}
+                    onChange={(e) => setNewProduct({...newProduct, weight: parseFloat(e.target.value) || 0})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="0.00"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Dimensions</label>
+                  <input
+                    type="text"
+                    value={newProduct.dimensions}
+                    onChange={(e) => setNewProduct({...newProduct, dimensions: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="e.g., 10x5x2 cm"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Available Status</label>
+                  <select
+                    value={newProduct.available ? 'true' : 'false'}
+                    onChange={(e) => setNewProduct({...newProduct, available: e.target.value === 'true'})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="true">✅ Available</option>
+                    <option value="false">❌ Out of Stock</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Tags</label>
+                  <input
+                    type="text"
+                    value={newProduct.tags}
+                    onChange={(e) => setNewProduct({...newProduct, tags: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="e.g., organic, premium, indoor"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Full Width Fields */}
+            <div className="mt-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                <textarea
+                  value={newProduct.description}
+                  onChange={(e) => setNewProduct({...newProduct, description: e.target.value})}
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter product description"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Specifications</label>
+                <textarea
+                  value={newProduct.specifications}
+                  onChange={(e) => setNewProduct({...newProduct, specifications: e.target.value})}
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter product specifications"
+                />
+              </div>
+
+              {/* Read-only Fields */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-gray-200">
+                <div>
+                  <label className="block text-sm font-medium text-gray-500 mb-2">Image URL (Read-only)</label>
+                  <input
+                    type="text"
+                    value={selectedProduct.imageUrl || 'No image URL'}
+                    disabled
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-500 mb-2">Average Rating (Read-only)</label>
+                  <input
+                    type="text"
+                    value={`${selectedProduct.rating || 0} / 5`}
+                    disabled
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-500 mb-2">Total Reviews (Read-only)</label>
+                  <input
+                    type="text"
+                    value={selectedProduct.reviewCount || 0}
+                    disabled
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed text-sm"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-gray-200">
+                <div>
+                  <label className="block text-sm font-medium text-gray-500 mb-2">Created Date (Read-only)</label>
+                  <input
+                    type="text"
+                    value={formatDate(selectedProduct.createdAt)}
+                    disabled
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-500 mb-2">Last Updated (Read-only)</label>
+                  <input
+                    type="text"
+                    value={formatDate(selectedProduct.updatedAt)}
+                    disabled
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed text-sm"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex space-x-3 mt-8">
+              <Button 
+                variant="primary" 
+                onClick={handleUpdateProduct}
+                disabled={updatingProduct}
+                className="flex-1 bg-gradient-to-r from-yellow-500 to-yellow-600 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {updatingProduct ? (
+                  <div className="flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                    Updating...
+                  </div>
+                ) : (
+                  '💾 Save Changes'
+                )}
               </Button>
               <Button 
                 variant="secondary" 
                 onClick={() => {
                   setShowEditProductModal(false);
                   setSelectedProduct(null);
-                  setNewProduct({ name: '', category: '', price: 0, description: '', imageUrl: '', stock: 0, available: true, brand: '', sku: '', weight: 0, dimensions: '', specifications: '', tags: '' });
+                  setNewProduct({ name: '', category: '', price: 0, description: '', imageUrl: '', stock: 0, available: true, brand: '', sku: '', weight: 0, dimensions: '', specifications: '', tags: '', rating: 0, reviewCount: 0 });
                 }}
                 className="flex-1"
               >
-                Cancel
+                ❌ Cancel
               </Button>
             </div>
           </div>
