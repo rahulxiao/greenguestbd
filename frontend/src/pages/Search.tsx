@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Header, Footer, Card, Button } from '../components';
 import { Search as SearchIcon, Filter, ChevronDown, ChevronUp, Grid, List, ShoppingCart, Heart, Star } from 'lucide-react';
+import { Header, Footer, Card, Button } from '../components';
 import { productService, Product } from '../services/product.service';
 import { cartService } from '../services/cart.service';
 import { wishlistService } from '../services/wishlist.service';
 import { formatCurrency } from '../utils/price';
 import { getProductImage, handleImageError } from '../utils/image';
+import { authService } from '../services/auth.service';
 
 // Custom styles for range sliders
 const rangeSliderStyles = `
@@ -46,8 +47,9 @@ const rangeSliderStyles = `
 const Search: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState('');
   const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [sortBy, setSortBy] = useState('relevance');
@@ -80,6 +82,31 @@ const Search: React.FC = () => {
   };
 
   const addToCart = async (productId: number) => {
+    // Check if user is authenticated
+    if (!authService.isAuthenticated()) {
+      alert('Please login to add items to your cart');
+      navigate('/login');
+      return;
+    }
+
+    // Find the product to check stock
+    const product = products.find(p => p.id === productId);
+    if (!product) {
+      alert('Product not found');
+      return;
+    }
+
+    // Check if product is available and in stock
+    if (!product.available) {
+      alert('This product is currently out of stock and cannot be added to cart');
+      return;
+    }
+
+    if (product.stock <= 0) {
+      alert('This product is currently out of stock and cannot be added to cart');
+      return;
+    }
+
     try {
       await cartService.addToCart({ productId, quantity: 1 });
       // Dispatch event to update header cart count
@@ -88,11 +115,19 @@ const Search: React.FC = () => {
       console.log('Product added to cart successfully');
     } catch (error) {
       console.error('Failed to add to cart:', error);
-      // Show error feedback (you can add a toast notification here)
+      const errorMessage = error instanceof Error ? error.message : 'Failed to add to cart';
+      alert(errorMessage);
     }
   };
 
   const addToWishlist = async (productId: number) => {
+    // Check if user is authenticated
+    if (!authService.isAuthenticated()) {
+      alert('Please login to add items to your wishlist');
+      navigate('/login');
+      return;
+    }
+
     try {
       await wishlistService.addToWishlist(productId);
       // Dispatch event to update header wishlist count
@@ -269,7 +304,22 @@ const Search: React.FC = () => {
       <style>{rangeSliderStyles}</style>
       <Header />
       
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-3 sm:py-4 lg:py-8">
+      {/* Authentication Banner for Unauthenticated Users */}
+      {!authService.isAuthenticated() && (
+        <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white py-3 px-4 text-center">
+          <div className="max-w-7xl mx-auto flex items-center justify-center gap-2">
+            <span className="text-sm">🔒 Please login to add products to your cart and wishlist</span>
+            <button 
+              onClick={() => navigate('/login')}
+              className="ml-4 bg-white text-blue-600 hover:bg-gray-100 px-3 py-1 rounded text-sm font-medium"
+            >
+              Login Now
+            </button>
+          </div>
+        </div>
+      )}
+      
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Search Header */}
         <div className="mb-4 sm:mb-6 lg:mb-8">
           <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
@@ -700,7 +750,7 @@ const Search: React.FC = () => {
                           </span>
                         </div>
                         
-                        <div className="flex flex-col space-y-2" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex flex-col space-y-2">
                           <Button 
                             variant="primary" 
                             size="small" 
@@ -708,11 +758,16 @@ const Search: React.FC = () => {
                             disabled={!product.available}
                             onClick={(e) => {
                               e.stopPropagation();
-                              addToCart(product.id);
+                              if (authService.isAuthenticated()) {
+                                addToCart(product.id);
+                              } else {
+                                alert('Please login to add items to your cart');
+                                navigate('/login');
+                              }
                             }}
                           >
                             <ShoppingCart className="h-4 w-4 mr-1" />
-                            {product.available ? 'Add to Cart' : 'Out of Stock'}
+                            {!authService.isAuthenticated() ? 'Login to Add' : (product.available ? 'Add to Cart' : 'Out of Stock')}
                           </Button>
                           <Button 
                             variant="secondary" 
@@ -720,11 +775,16 @@ const Search: React.FC = () => {
                             className="w-full"
                             onClick={(e) => {
                               e.stopPropagation();
-                              addToWishlist(product.id);
+                              if (authService.isAuthenticated()) {
+                                addToWishlist(product.id);
+                              } else {
+                                alert('Please login to add items to your wishlist');
+                                navigate('/login');
+                              }
                             }}
                           >
                             <Heart className="h-4 w-4 mr-1" />
-                            Wishlist
+                            {authService.isAuthenticated() ? 'Wishlist' : 'Login to Wishlist'}
                           </Button>
                         </div>
                       </div>

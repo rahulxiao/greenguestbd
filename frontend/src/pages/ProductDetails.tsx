@@ -5,6 +5,7 @@ import { Star, Heart, ShoppingCart, Truck, Shield, Leaf, ArrowLeft, Share2, Mess
 import { wishlistService } from '../services/wishlist.service';
 import { cartService } from '../services/cart.service';
 import { productService, Product as ServiceProduct } from '../services/product.service';
+import { authService } from '../services/auth.service';
 
 // Product interface for the details page (separate from service interface)
 interface ProductDetails {
@@ -180,6 +181,24 @@ const ProductDetails: React.FC = () => {
   const addToCart = async () => {
     if (!product) return;
     
+    // Check if user is authenticated
+    if (!authService.isAuthenticated()) {
+      alert('Please login to add items to your cart');
+      navigate('/login');
+      return;
+    }
+    
+    // Check if product is available and has sufficient stock
+    if (!product.inStock) {
+      alert('This product is currently out of stock and cannot be added to cart');
+      return;
+    }
+    
+    if (product.stockQuantity < quantity) {
+      alert(`Only ${product.stockQuantity} items available in stock. Please reduce quantity.`);
+      return;
+    }
+    
     try {
       setCartLoading(true);
       setError(null);
@@ -210,6 +229,13 @@ const ProductDetails: React.FC = () => {
   const addToWishlist = async () => {
     if (!product) return;
     
+    // Check if user is authenticated
+    if (!authService.isAuthenticated()) {
+      alert('Please login to add items to your wishlist');
+      navigate('/login');
+      return;
+    }
+    
     try {
       setWishlistLoading(true);
       setError(null);
@@ -217,7 +243,7 @@ const ProductDetails: React.FC = () => {
       
       if (isInWishlist) {
         // Remove from wishlist
-        await wishlistService.removeProductFromWishlist(product.id);
+        await wishlistService.removeFromWishlist(product.id);
         setIsInWishlist(false);
         setSuccess(`${product.name} removed from wishlist!`);
       } else {
@@ -227,10 +253,10 @@ const ProductDetails: React.FC = () => {
         setSuccess(`${product.name} added to wishlist!`);
       }
       
+      setTimeout(() => setSuccess(null), 3000);
+      
       // Dispatch event to update header wishlist count
       window.dispatchEvent(new CustomEvent('wishlistUpdated'));
-      
-      setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to update wishlist';
       setError(errorMessage);
@@ -279,7 +305,22 @@ const ProductDetails: React.FC = () => {
     <div className="min-h-screen bg-gray-50">
       <Header />
       
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
+      {/* Authentication Banner for Unauthenticated Users */}
+      {!authService.isAuthenticated() && (
+        <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white py-3 px-4 text-center">
+          <div className="max-w-7xl mx-auto flex items-center justify-center gap-2">
+            <span className="text-sm">🔒 Please login to add products to your cart and wishlist</span>
+            <button 
+              onClick={() => navigate('/login')}
+              className="ml-4 bg-white text-blue-600 hover:bg-gray-100 px-3 py-1 rounded text-sm font-medium"
+            >
+              Login Now
+            </button>
+          </div>
+        </div>
+      )}
+      
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
         <div className="mb-4 sm:mb-6">
           <button
@@ -451,21 +492,35 @@ const ProductDetails: React.FC = () => {
             <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3">
               <Button
                 variant="primary"
-                onClick={addToCart}
+                onClick={() => {
+                  if (authService.isAuthenticated()) {
+                    addToCart();
+                  } else {
+                    alert('Please login to add items to your cart');
+                    navigate('/login');
+                  }
+                }}
                 disabled={!product.inStock || cartLoading}
                 className="flex-1"
               >
                 {cartLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <ShoppingCart className="h-4 w-4 mr-2" />}
-                {cartLoading ? 'Adding...' : product.inStock ? 'Add to Cart' : 'Out of Stock'}
+                {cartLoading ? 'Adding...' : !authService.isAuthenticated() ? 'Login to Add' : (product.inStock ? 'Add to Cart' : 'Out of Stock')}
               </Button>
               <Button
                 variant="secondary"
-                onClick={addToWishlist}
+                onClick={() => {
+                  if (authService.isAuthenticated()) {
+                    addToWishlist();
+                  } else {
+                    alert('Please login to add items to your wishlist');
+                    navigate('/login');
+                  }
+                }}
                 disabled={wishlistLoading}
                 className="flex-1"
               >
                 {wishlistLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Heart className="h-4 w-4 mr-2" />}
-                {wishlistLoading ? 'Updating...' : isInWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'}
+                {wishlistLoading ? 'Updating...' : !authService.isAuthenticated() ? 'Login to Wishlist' : (isInWishlist ? 'Remove from Wishlist' : 'Add to Wishlist')}
               </Button>
             </div>
 

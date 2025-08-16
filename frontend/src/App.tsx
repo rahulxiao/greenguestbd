@@ -22,6 +22,7 @@ import { cartService } from './services/cart.service';
 import { wishlistService } from './services/wishlist.service';
 import { formatCurrency } from './utils/price';
 import { getProductImage, handleImageError } from './utils/image';
+import { authService } from './services/auth.service';
 
 function HomePage() {
   const navigate = useNavigate();
@@ -30,6 +31,30 @@ function HomePage() {
   const [popularProducts, setPopularProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  // Check authentication status
+  useEffect(() => {
+    const checkAuth = () => {
+      const authStatus = authService.isAuthenticated();
+      setIsAuthenticated(authStatus);
+    };
+    
+    checkAuth();
+    
+    // Listen for authentication changes
+    const handleAuthChange = () => {
+      checkAuth();
+    };
+    
+    window.addEventListener('storage', handleAuthChange);
+    window.addEventListener('authFailed', handleAuthChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleAuthChange);
+      window.removeEventListener('authFailed', handleAuthChange);
+    };
+  }, []);
 
   // Fetch products from backend
   useEffect(() => {
@@ -68,6 +93,24 @@ function HomePage() {
   };
 
   const handleAddToCart = async (product: Product) => {
+    // Check if user is authenticated
+    if (!authService.isAuthenticated()) {
+      alert('Please login to add items to your cart');
+      navigate('/login');
+      return;
+    }
+
+    // Check if product is available and in stock
+    if (!product.available) {
+      alert('This product is currently out of stock and cannot be added to cart');
+      return;
+    }
+
+    if (product.stock <= 0) {
+      alert('This product is currently out of stock and cannot be added to cart');
+      return;
+    }
+
     try {
       await cartService.addToCart({ productId: product.id, quantity: 1 });
       // Dispatch event to update header cart count
@@ -76,11 +119,19 @@ function HomePage() {
       alert(`${product.name} added to cart successfully!`);
     } catch (err) {
       console.error('Failed to add to cart:', err);
-      alert('Failed to add to cart. Please try again.');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to add to cart';
+      alert(errorMessage);
     }
   };
 
   const handleAddToWishlist = async (product: Product) => {
+    // Check if user is authenticated
+    if (!authService.isAuthenticated()) {
+      alert('Please login to add items to your wishlist');
+      navigate('/login');
+      return;
+    }
+
     try {
       await wishlistService.addToWishlist(product.id);
       // Dispatch event to update header wishlist count
@@ -202,6 +253,23 @@ function HomePage() {
 
       <Header onMenuClick={handleMenuClick} />
       
+      {/* Authentication Banner for Unauthenticated Users */}
+      {!isAuthenticated && (
+        <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white py-3 px-4 text-center">
+          <div className="max-w-7xl mx-auto flex items-center justify-center gap-2">
+            <span className="text-sm">🔒 Please login to add products to your cart and wishlist</span>
+            <Button 
+              variant="secondary" 
+              size="small" 
+              onClick={() => navigate('/login')}
+              className="ml-4 bg-white text-blue-600 hover:bg-gray-100"
+            >
+              Login Now
+            </Button>
+          </div>
+        </div>
+      )}
+      
       <main className="flex-1 relative z-10">
         {/* Hero Section with Product Slider */}
         <section className="relative py-20 overflow-hidden">
@@ -282,10 +350,15 @@ function HomePage() {
                             className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-green-500/25 mt-4"
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleAddToCart(product);
+                              if (isAuthenticated) {
+                                handleAddToCart(product);
+                              } else {
+                                alert('Please login to add items to your cart');
+                                navigate('/login');
+                              }
                             }}
                           >
-                            View Details →
+                            {isAuthenticated ? 'Add to Cart →' : 'Login to Add →'}
                           </button>
                         </div>
 
@@ -381,20 +454,30 @@ function HomePage() {
                           disabled={!product.available}
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleAddToCart(product);
+                            if (isAuthenticated) {
+                              handleAddToCart(product);
+                            } else {
+                              alert('Please login to add items to your cart');
+                              navigate('/login');
+                            }
                           }}
                         >
-                          {product.available ? 'Add to Cart' : 'Out of Stock'}
+                          {!isAuthenticated ? 'Login to Add' : (product.available ? 'Add to Cart' : 'Out of Stock')}
                         </Button>
                         <Button 
                           variant="secondary" 
                           size="small"
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleAddToWishlist(product);
+                            if (isAuthenticated) {
+                              handleAddToWishlist(product);
+                            } else {
+                              alert('Please login to add items to your wishlist');
+                              navigate('/login');
+                            }
                           }}
                         >
-                          ♥
+                          {isAuthenticated ? '♥' : '♡'}
                         </Button>
                       </div>
                     </div>
@@ -513,15 +596,39 @@ function App() {
             <AdminPage />
           </ProtectedRoute>
         } />
-        <Route path="/profile" element={<UserProfile />} />
+        <Route path="/profile" element={
+          <ProtectedRoute>
+            <UserProfile />
+          </ProtectedRoute>
+        } />
         <Route path="/terms" element={<TermsOfService />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
-        <Route path="/cart" element={<Cart />} />
-        <Route path="/checkout" element={<Checkout />} />
-        <Route path="/order-confirmation" element={<OrderConfirmation />} />
-        <Route path="/wishlist" element={<Wishlist />} />
+        <Route path="/cart" element={
+          <ProtectedRoute>
+            <Cart />
+          </ProtectedRoute>
+        } />
+        <Route path="/checkout" element={
+          <ProtectedRoute>
+            <Checkout />
+          </ProtectedRoute>
+        } />
+        <Route path="/order-confirmation" element={
+          <ProtectedRoute>
+            <OrderConfirmation />
+          </ProtectedRoute>
+        } />
+        <Route path="/wishlist" element={
+          <ProtectedRoute>
+            <Wishlist />
+          </ProtectedRoute>
+        } />
         <Route path="/search" element={<Search />} />
-        <Route path="/orders" element={<Orders />} />
+        <Route path="/orders" element={
+          <ProtectedRoute>
+            <Orders />
+          </ProtectedRoute>
+        } />
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
       </Routes>

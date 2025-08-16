@@ -68,8 +68,19 @@ class AuthService {
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
+      // Clear all authentication and user data
       localStorage.removeItem('authToken');
       localStorage.removeItem('user');
+      
+      // Clear any cart and wishlist related data that might persist
+      localStorage.removeItem('cartItems');
+      localStorage.removeItem('wishlistItems');
+      localStorage.removeItem('cartCount');
+      localStorage.removeItem('wishlistCount');
+      
+      // Clear any other user-specific data
+      localStorage.removeItem('userPreferences');
+      localStorage.removeItem('recentSearches');
     }
   }
 

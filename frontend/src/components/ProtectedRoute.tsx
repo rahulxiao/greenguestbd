@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { adminService } from '../services';
+import { authService } from '../services/auth.service';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -18,8 +19,9 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requireAdmin 
         const adminAuth = adminService.isAdminAuthenticated();
         setIsAuthenticated(adminAuth);
       } else {
-        // For user routes, you can add user authentication check here
-        setIsAuthenticated(true);
+        // Check user authentication properly
+        const userAuth = authService.isAuthenticated();
+        setIsAuthenticated(userAuth);
       }
       setIsLoading(false);
     };

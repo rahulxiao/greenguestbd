@@ -7,6 +7,7 @@ import { wishlistService } from '../services/wishlist.service';
 import { productService } from '../services/product.service';
 import { formatCurrency } from '../utils/price';
 import { getProductImage, handleImageError } from '../utils/image';
+import { authService } from '../services/auth.service';
 
 const Cart: React.FC = () => {
   const navigate = useNavigate();
@@ -16,6 +17,42 @@ const Cart: React.FC = () => {
   const [updatingItem, setUpdatingItem] = useState<number | null>(null);
   const [removingItem, setRemovingItem] = useState<number | null>(null);
   const [movingToWishlist, setMovingToWishlist] = useState<number | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+
+  // Check authentication on component mount
+  useEffect(() => {
+    const checkAuth = () => {
+      if (!authService.isAuthenticated()) {
+        navigate('/login');
+        return;
+      }
+    };
+    
+    checkAuth();
+  }, [navigate]);
+
+  // Additional check to ensure user stays authenticated
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!authService.isAuthenticated()) {
+        navigate('/login');
+      }
+    }, 5000); // Check every 5 seconds
+
+    return () => clearInterval(interval);
+  }, [navigate]);
+
+  // Auto-refresh cart data to check for stock changes
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (authService.isAuthenticated() && cartItems.length > 0) {
+        // Refresh cart data to check for stock changes
+        forceRefreshProductData();
+      }
+    }, 30000); // Refresh every 30 seconds
+
+    return () => clearInterval(interval);
+  }, [cartItems.length]);
 
   // Utility function to safely convert price to number
   const safePrice = (price: any): number => {
@@ -210,6 +247,23 @@ const Cart: React.FC = () => {
   const updateQuantity = async (itemId: number, newQuantity: number) => {
     if (newQuantity < 1) return;
     
+    // Find the cart item to check stock
+    const cartItem = cartItems.find(item => item.id === itemId);
+    if (!cartItem) return;
+    
+    // Check if product is available and has sufficient stock
+    if (!cartItem.product?.available) {
+      setError('This product is currently out of stock and cannot be updated');
+      setTimeout(() => setError(null), 3000);
+      return;
+    }
+    
+    if (newQuantity > (cartItem.product?.stock || 0)) {
+      setError(`Only ${cartItem.product?.stock || 0} items available in stock`);
+      setTimeout(() => setError(null), 3000);
+      return;
+    }
+    
     try {
       setUpdatingItem(itemId);
       const updatedItem = await cartService.updateCartItem(itemId, { quantity: newQuantity });
@@ -280,8 +334,35 @@ const Cart: React.FC = () => {
     }
   };
 
+  const removeOutOfStockItems = async () => {
+    try {
+      const outOfStockItems = cartItems.filter(item => !item.product?.available || (item.product?.stock || 0) === 0);
+      
+      // Remove each out-of-stock item
+      for (const item of outOfStockItems) {
+        await cartService.removeFromCart(item.id);
+      }
+      
+      // Update local state
+      setCartItems(prev => prev.filter(item => item.product?.available && (item.product?.stock || 0) > 0));
+      
+      // Dispatch event to update header cart count
+      window.dispatchEvent(new CustomEvent('cartUpdated'));
+      
+      setSuccess(`${outOfStockItems.length} out-of-stock item(s) removed from cart`);
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err) {
+      console.error('Failed to remove out-of-stock items:', err);
+      setError('Failed to remove out-of-stock items. Please try again.');
+    }
+  };
+
   const getSubtotal = () => {
     return cartItems.reduce((sum, item) => {
+      // Skip out-of-stock items in subtotal calculation
+      if (!item.product?.available || (item.product?.stock || 0) === 0) {
+        return sum;
+      }
       const price = safePrice(item.product?.price);
       return sum + (price * item.quantity);
     }, 0);
@@ -381,6 +462,23 @@ const Cart: React.FC = () => {
           </div>
         )}
 
+        {success && (
+          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+            <div className="flex items-center">
+              <svg className="h-5 w-5 text-green-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p className="text-sm font-medium text-green-800">{success}</p>
+              <button
+                onClick={() => setSuccess(null)}
+                className="ml-auto text-green-400 hover:text-green-600"
+              >
+                ×
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className="flex items-center mb-8">
           <button
             onClick={handleContinueShopping}
@@ -417,6 +515,18 @@ const Cart: React.FC = () => {
                       )}
                       Refresh
                     </button>
+                    {cartItems.some(item => !item.product?.available || (item.product?.stock || 0) === 0) && (
+                      <button
+                        onClick={removeOutOfStockItems}
+                        className="text-red-600 hover:text-red-700 text-sm font-medium flex items-center"
+                        title="Remove all out-of-stock items"
+                      >
+                        <svg className="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                        </svg>
+                        Remove Out of Stock
+                      </button>
+                    )}
                     <button
                       onClick={handleViewWishlist}
                       className="text-green-600 hover:text-green-700 text-sm font-medium flex items-center"
@@ -443,6 +553,26 @@ const Cart: React.FC = () => {
                       <p className="text-sm text-gray-600">
                         {cartItems.length} item{cartItems.length !== 1 ? 's' : ''} in your cart
                       </p>
+                      {cartItems.some(item => !item.product?.available || (item.product?.stock || 0) === 0) && (
+                        <div className="mt-2 p-2 bg-red-100 border border-red-200 rounded-lg">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center">
+                              <svg className="h-4 w-4 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                              </svg>
+                              <span className="text-xs text-red-700">
+                                {cartItems.filter(item => !item.product?.available || (item.product?.stock || 0) === 0).length} out-of-stock item(s)
+                              </span>
+                            </div>
+                            <button
+                              onClick={removeOutOfStockItems}
+                              className="text-xs text-red-600 hover:text-red-700 underline"
+                            >
+                              Remove All
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                     <div className="text-right">
                       <p className="text-sm text-gray-600">Subtotal</p>
@@ -452,103 +582,136 @@ const Cart: React.FC = () => {
                       <p className="text-xs text-gray-500">
                         Shipping: {getShipping() === 0 ? 'Free' : `৳${getShipping().toFixed(2)}`}
                       </p>
+                      {cartItems.some(item => !item.product?.available || (item.product?.stock || 0) === 0) && (
+                        <p className="text-xs text-red-600 mt-1">
+                          *Out-of-stock items excluded from total
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
                 
-                {cartItems.map((item) => (
-                  <div key={item.id} className="p-6">
-                    <div className="flex items-center">
-                      <div className="w-20 h-20 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden">
-                        {item.product?.imageUrl ? (
-                          <img
-                            src={getProductImage(item.product.imageUrl)}
-                            alt={item.product.name || "Product"}
-                            className="w-full h-full object-cover"
-                            onError={handleImageError}
-                          />
-                        ) : null}
-                        {/* Placeholder icon for when no image or image fails */}
-                        <div className={`placeholder-icon ${item.product?.imageUrl ? 'hidden' : ''} text-gray-400`}>
-                          <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                          </svg>
+                {cartItems.map((item) => {
+                  const isOutOfStock = !item.product?.available || (item.product?.stock || 0) === 0;
+                  const currentStock = item.product?.stock || 0;
+                  
+                  return (
+                    <div key={item.id} className={`p-6 ${isOutOfStock ? 'bg-red-50 border-l-4 border-red-400' : ''}`}>
+                      {/* Out of Stock Banner */}
+                      {isOutOfStock && (
+                        <div className="mb-4 p-3 bg-red-100 border border-red-200 rounded-lg">
+                          <div className="flex items-center">
+                            <svg className="h-5 w-5 text-red-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                            </svg>
+                            <span className="text-sm font-medium text-red-800">
+                              This item is currently out of stock
+                            </span>
+                          </div>
                         </div>
-                      </div>
+                      )}
                       
-                      <div className="ml-4 flex-1">
-                        <h3 className="text-lg font-medium text-gray-900">{item.product?.name || "Product Name"}</h3>
-                        <p className="text-gray-600">Stock: {item.product?.stock || 0} available</p>
-                        <p className="text-lg font-semibold text-green-600">
-                          ৳{safePrice(item.product?.price).toFixed(2)}
-                        </p>
-                      </div>
-
-                      <div className="flex items-center space-x-3">
-                        <div className="flex items-center border border-gray-300 rounded-md">
-                          <button
-                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                            className="p-2 hover:bg-gray-100 disabled:opacity-50"
-                            disabled={item.quantity <= 1 || updatingItem === item.id}
-                          >
-                            <Minus className="h-4 w-4" />
-                          </button>
-                          <span className="px-4 py-2 text-center min-w-[3rem]">
-                            {updatingItem === item.id ? (
-                              <Loader2 className="h-4 w-4 animate-spin mx-auto" />
-                            ) : (
-                              item.quantity
-                            )}
-                          </span>
-                          <button
-                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                            className="p-2 hover:bg-gray-100 disabled:opacity-50"
-                            disabled={item.quantity >= (item.product?.stock || 0) || updatingItem === item.id}
-                          >
-                            <Plus className="h-4 w-4" />
-                          </button>
+                      <div className="flex items-center">
+                        <div className="w-20 h-20 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden">
+                          {item.product?.imageUrl ? (
+                            <img
+                              src={getProductImage(item.product.imageUrl)}
+                              alt={item.product.name || "Product"}
+                              className="w-full h-full object-cover"
+                              onError={handleImageError}
+                            />
+                          ) : null}
+                          {/* Placeholder icon for when no image or image fails */}
+                          <div className={`placeholder-icon ${item.product?.imageUrl ? 'hidden' : ''} text-gray-400`}>
+                            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                          </div>
                         </div>
-
-                        <div className="text-right">
+                        
+                        <div className="ml-4 flex-1">
+                          <h3 className="text-lg font-medium text-gray-900">{item.product?.name || "Product Name"}</h3>
+                          <div className="flex items-center space-x-4 mt-1">
+                            <p className={`text-sm ${isOutOfStock ? 'text-red-600' : 'text-gray-600'}`}>
+                              Stock: {currentStock} available
+                            </p>
+                            {isOutOfStock && (
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                Out of Stock
+                              </span>
+                            )}
+                          </div>
                           <p className="text-lg font-semibold text-green-600">
-                            ৳{(safePrice(item.product?.price) * item.quantity).toFixed(2)}
-                          </p>
-                          <p className="text-sm text-gray-600">
-                            Total: ৳{(safePrice(item.product?.price) * item.quantity).toFixed(2)}
+                            ৳{safePrice(item.product?.price).toFixed(2)}
                           </p>
                         </div>
 
-                        <div className="flex flex-col space-y-2">
-                          <button
-                            onClick={() => moveToWishlist(item.id)}
-                            disabled={movingToWishlist === item.id}
-                            className="text-green-600 hover:text-green-700 p-2 disabled:opacity-50"
-                            title="Move to Wishlist"
-                          >
-                            {movingToWishlist === item.id ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <Heart className="h-4 w-4" />
-                            )}
-                          </button>
-                          
-                          <button
-                            onClick={() => removeItem(item.id)}
-                            disabled={removingItem === item.id}
-                            className="text-red-600 hover:text-red-700 p-2 disabled:opacity-50"
-                            title="Remove Item"
-                          >
-                            {removingItem === item.id ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <Trash2 className="h-5 w-5" />
-                            )}
-                          </button>
+                        <div className="flex items-center space-x-3">
+                          <div className="flex items-center border border-gray-300 rounded-md">
+                            <button
+                              onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                              className="p-2 hover:bg-gray-100 disabled:opacity-50"
+                              disabled={item.quantity <= 1 || updatingItem === item.id || isOutOfStock}
+                            >
+                              <Minus className="h-4 w-4" />
+                            </button>
+                            <span className="px-4 py-2 text-center min-w-[3rem]">
+                              {updatingItem === item.id ? (
+                                <Loader2 className="h-4 w-4 animate-spin mx-auto" />
+                              ) : (
+                                item.quantity
+                              )}
+                            </span>
+                            <button
+                              onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                              className="p-2 hover:bg-gray-100 disabled:opacity-50"
+                              disabled={item.quantity >= currentStock || updatingItem === item.id || isOutOfStock}
+                            >
+                              <Plus className="h-4 w-4" />
+                            </button>
+                          </div>
+
+                          <div className="text-right">
+                            <p className="text-lg font-semibold text-green-600">
+                              ৳{(safePrice(item.product?.price) * item.quantity).toFixed(2)}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              Total: ৳{(safePrice(item.product?.price) * item.quantity).toFixed(2)}
+                            </p>
+                          </div>
+
+                          <div className="flex flex-col space-y-2">
+                            <button
+                              onClick={() => moveToWishlist(item.id)}
+                              disabled={movingToWishlist === item.id}
+                              className="text-green-600 hover:text-green-700 p-2 disabled:opacity-50"
+                              title="Move to Wishlist"
+                            >
+                              {movingToWishlist === item.id ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Heart className="h-4 w-4" />
+                              )}
+                            </button>
+                            
+                            <button
+                              onClick={() => removeItem(item.id)}
+                              disabled={removingItem === item.id}
+                              className="text-red-600 hover:text-red-700 p-2 disabled:opacity-50"
+                              title="Remove Item"
+                            >
+                              {removingItem === item.id ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Trash2 className="h-5 w-5" />
+                              )}
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -585,10 +748,31 @@ const Cart: React.FC = () => {
 
               <button
                 onClick={handleCheckout}
-                className="w-full mt-6 bg-green-600 text-white py-3 px-4 rounded-md font-medium hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
+                disabled={cartItems.some(item => !item.product?.available || (item.product?.stock || 0) === 0)}
+                className={`w-full mt-6 py-3 px-4 rounded-md font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors ${
+                  cartItems.some(item => !item.product?.available || (item.product?.stock || 0) === 0)
+                    ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
+                    : 'bg-green-600 text-white hover:bg-green-700'
+                }`}
               >
-                Proceed to Checkout
+                {cartItems.some(item => !item.product?.available || (item.product?.stock || 0) === 0)
+                  ? 'Cannot Checkout - Out of Stock Items'
+                  : 'Proceed to Checkout'
+                }
               </button>
+
+              {cartItems.some(item => !item.product?.available || (item.product?.stock || 0) === 0) && (
+                <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <div className="flex items-center">
+                    <svg className="h-4 w-4 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L3.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                    <span className="text-xs text-red-700">
+                      Please remove out-of-stock items before proceeding to checkout
+                    </span>
+                  </div>
+                </div>
+              )}
 
               <div className="mt-4 text-sm text-gray-600">
                 <p>• Secure checkout with SSL encryption</p>

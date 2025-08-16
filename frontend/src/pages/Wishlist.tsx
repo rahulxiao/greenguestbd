@@ -5,6 +5,7 @@ import { Header, Footer } from '../components';
 import { wishlistService, WishlistItem } from '../services/wishlist.service';
 import { formatCurrency } from '../utils/price';
 import { getProductImage, handleImageError } from '../utils/image';
+import { authService } from '../services/auth.service';
 
 const Wishlist: React.FC = () => {
   const navigate = useNavigate();
@@ -13,6 +14,29 @@ const Wishlist: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [removingItem, setRemovingItem] = useState<number | null>(null);
   const [addingToCart, setAddingToCart] = useState<number | null>(null);
+
+  // Check authentication on component mount
+  useEffect(() => {
+    const checkAuth = () => {
+      if (!authService.isAuthenticated()) {
+        navigate('/login');
+        return;
+      }
+    };
+    
+    checkAuth();
+  }, [navigate]);
+
+  // Additional check to ensure user stays authenticated
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!authService.isAuthenticated()) {
+        navigate('/login');
+      }
+    }, 5000); // Check every 5 seconds
+
+    return () => clearInterval(interval);
+  }, [navigate]);
 
   // Fetch real wishlist data from backend
   useEffect(() => {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, Menu, X, ShoppingCart, Heart, Wifi, User, LogOut, Package, Settings, ChevronDown } from 'lucide-react';
+import { Search, Menu, X, ShoppingCart, Heart, Wifi, User, LogOut, Package, Settings, ChevronDown, Lock } from 'lucide-react';
 import ConnectionTestService from '../../services/connection-test';
 import { authService } from '../../services/auth.service';
 import { cartService } from '../../services/cart.service';
@@ -13,7 +13,7 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ 
-  title = "BonsaiMarket", 
+  title = "GreenGuest", 
   onMenuClick,
   showCategories = true
 }) => {
@@ -52,15 +52,59 @@ const Header: React.FC<HeaderProps> = ({
             setCartCount(0);
             setWishlistCount(0);
           }
+        } else {
+          // No token or user data, ensure counts are 0
+          setUser(null);
+          setCartCount(0);
+          setWishlistCount(0);
         }
       } catch (error) {
         console.error('Error checking auth:', error);
+        // Reset state on error
+        setUser(null);
+        setCartCount(0);
+        setWishlistCount(0);
       } finally {
         setLoading(false);
       }
     };
 
     checkAuth();
+  }, []);
+
+  // Check authentication status on each render to handle token expiration
+  useEffect(() => {
+    const checkTokenValidity = () => {
+      const token = localStorage.getItem('authToken');
+      if (!token && user) {
+        // Token was removed but user state still exists, reset everything
+        setUser(null);
+        setCartCount(0);
+        setWishlistCount(0);
+      }
+    };
+
+    checkTokenValidity();
+  });
+
+  // Listen for localStorage changes (e.g., when token is manually removed)
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'authToken' || e.key === 'user') {
+        if (!e.newValue) {
+          // Token or user data was removed, reset state
+          setUser(null);
+          setCartCount(0);
+          setWishlistCount(0);
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, []);
 
   // Function to refresh cart and wishlist counts
@@ -83,6 +127,10 @@ const Header: React.FC<HeaderProps> = ({
     // Refresh counts when component mounts or when user changes
     if (user) {
       refreshCounts();
+    } else {
+      // Reset counts when user is null (after logout)
+      setCartCount(0);
+      setWishlistCount(0);
     }
   }, [user]);
 
@@ -91,13 +139,22 @@ const Header: React.FC<HeaderProps> = ({
     // Add event listeners for cart/wishlist updates
     const handleCartUpdate = () => refreshCounts();
     const handleWishlistUpdate = () => refreshCounts();
+    const handleAuthFailed = () => {
+      // Handle automatic logout when token expires
+      setUser(null);
+      setCartCount(0);
+      setWishlistCount(0);
+      setIsUserMenuOpen(false);
+    };
     
     window.addEventListener('cartUpdated', handleCartUpdate);
     window.addEventListener('wishlistUpdated', handleWishlistUpdate);
+    window.addEventListener('authFailed', handleAuthFailed);
     
     return () => {
       window.removeEventListener('cartUpdated', handleCartUpdate);
       window.removeEventListener('wishlistUpdated', handleWishlistUpdate);
+      window.removeEventListener('authFailed', handleAuthFailed);
     };
   }, []);
 
@@ -106,6 +163,9 @@ const Header: React.FC<HeaderProps> = ({
       await authService.logout();
       setUser(null);
       setIsUserMenuOpen(false);
+      // Reset cart and wishlist counts to 0
+      setCartCount(0);
+      setWishlistCount(0);
       navigate('/');
     } catch (error) {
       console.error('Logout error:', error);
@@ -114,6 +174,9 @@ const Header: React.FC<HeaderProps> = ({
       localStorage.removeItem('user');
       setUser(null);
       setIsUserMenuOpen(false);
+      // Reset cart and wishlist counts to 0
+      setCartCount(0);
+      setWishlistCount(0);
       navigate('/');
     }
   };
@@ -290,23 +353,53 @@ const Header: React.FC<HeaderProps> = ({
               </>
             )}
             
-            <Link to="/wishlist" className="relative text-green-700 hover:text-green-800 transition-colors">
-              <div className="bg-gradient-to-br from-green-100 to-emerald-200 p-2 rounded-full shadow-sm">
-                <Heart className="h-4 w-4" />
+            <div 
+              onClick={() => {
+                if (!user) {
+                  alert('Please login to view your wishlist');
+                  navigate('/login');
+                } else {
+                  navigate('/wishlist');
+                }
+              }}
+              className={`relative transition-colors cursor-pointer ${
+                user ? 'text-green-700 hover:text-green-800' : 'text-gray-400 hover:text-gray-500'
+              }`}
+              title={user ? 'View Wishlist' : 'Login to view Wishlist'}
+            >
+              <div className={`p-2 rounded-full shadow-sm ${
+                user ? 'bg-gradient-to-br from-green-100 to-emerald-200' : 'bg-gray-100'
+              }`}>
+                {user ? <Heart className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
               </div>
               <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center shadow-lg">
                 {wishlistCount}
               </span>
-            </Link>
+            </div>
             
-            <Link to="/cart" className="relative text-green-700 hover:text-green-800 transition-colors">
-              <div className="bg-gradient-to-br from-green-100 to-emerald-200 p-2 rounded-full shadow-sm">
-                <ShoppingCart className="h-4 w-4" />
+            <div 
+              onClick={() => {
+                if (!user) {
+                  alert('Please login to view your cart');
+                  navigate('/login');
+                } else {
+                  navigate('/cart');
+                }
+              }}
+              className={`relative transition-colors cursor-pointer ${
+                user ? 'text-green-700 hover:text-green-800' : 'text-gray-400 hover:text-gray-500'
+              }`}
+              title={user ? 'View Cart' : 'Login to view Cart'}
+            >
+              <div className={`p-2 rounded-full shadow-sm ${
+                user ? 'bg-gradient-to-br from-green-100 to-emerald-200' : 'bg-gray-100'
+              }`}>
+                {user ? <ShoppingCart className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
               </div>
               <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center shadow-lg">
                 {cartCount}
               </span>
-            </Link>
+            </div>
             
             {/* Mobile Menu Button */}
             <button 
@@ -407,6 +500,34 @@ const Header: React.FC<HeaderProps> = ({
             >
               Search All
             </Link>
+            <div 
+              onClick={() => {
+                closeMobileMenu();
+                if (!user) {
+                  alert('Please login to view your cart');
+                  navigate('/login');
+                } else {
+                  navigate('/cart');
+                }
+              }}
+              className="block text-green-700 hover:text-green-800 transition-colors font-medium py-2 cursor-pointer"
+            >
+              Cart ({cartCount})
+            </div>
+            <div 
+              onClick={() => {
+                closeMobileMenu();
+                if (!user) {
+                  alert('Please login to view your wishlist');
+                  navigate('/login');
+                } else {
+                  navigate('/wishlist');
+                }
+              }}
+              className="block text-green-700 hover:text-green-800 transition-colors font-medium py-2 cursor-pointer"
+            >
+              Wishlist ({wishlistCount})
+            </div>
           </div>
         </div>
       )}

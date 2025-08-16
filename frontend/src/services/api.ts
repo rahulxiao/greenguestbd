@@ -23,6 +23,15 @@ class ApiService {
         url: response.url
       });
       
+      // Handle unauthorized/forbidden responses (token expired or invalid)
+      if (response.status === 401 || response.status === 403) {
+        // Clear invalid token and redirect to login
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('user');
+        // Dispatch event to notify components about auth failure
+        window.dispatchEvent(new CustomEvent('authFailed'));
+      }
+      
       const errorData = await response.json().catch(() => ({}));
       console.error('❌ Error data:', errorData);
       

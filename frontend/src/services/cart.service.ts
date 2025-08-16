@@ -42,6 +42,18 @@ class CartService {
   async addToCart(data: AddToCartData): Promise<CartItem> {
     try {
       console.log('🛒 CartService: Adding to cart:', data);
+      
+      // First check if product is available and has sufficient stock
+      const productResponse = await apiService.get<{ id: number; stock: number; available: boolean }>(`/products/getProductById/${data.productId}`);
+      
+      if (!productResponse.available) {
+        throw new Error('Product is currently out of stock');
+      }
+      
+      if (productResponse.stock < data.quantity) {
+        throw new Error(`Only ${productResponse.stock} items available in stock`);
+      }
+      
       const response = await apiService.post<CartItem>('/cart/addToCart', data);
       console.log('✅ CartService: Successfully added to cart:', response);
       return response;
@@ -92,6 +104,34 @@ class CartService {
       return await apiService.post<{ success: boolean; message: string }>(`/cart/moveToWishlist/${itemId}`);
     } catch (error) {
       throw new Error(error instanceof Error ? error.message : 'Failed to move item to wishlist');
+    }
+  }
+
+  async validateCartItemStock(itemId: number): Promise<{ isValid: boolean; currentStock: number; available: boolean }> {
+    try {
+      // Get cart item details to check product stock
+      const cartItem = await this.getCartItems();
+      const item = cartItem.find(cartItem => cartItem.id === itemId);
+      
+      if (!item) {
+        throw new Error('Cart item not found');
+      }
+
+      // Check current product stock
+      const productResponse = await apiService.get<{ id: number; stock: number; available: boolean }>(`/products/getProductById/${item.productId}`);
+      
+      return {
+        isValid: productResponse.available && productResponse.stock >= item.quantity,
+        currentStock: productResponse.stock,
+        available: productResponse.available
+      };
+    } catch (error) {
+      console.error('Failed to validate cart item stock:', error);
+      return {
+        isValid: false,
+        currentStock: 0,
+        available: false
+      };
     }
   }
 }

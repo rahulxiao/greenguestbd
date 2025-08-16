@@ -120,6 +120,17 @@ const AdminPage: React.FC = () => {
   const [adminsLoading, setAdminsLoading] = useState(false);
   const [updatingProduct, setUpdatingProduct] = useState(false);
 
+  // Search states
+  const [productSearchQuery, setProductSearchQuery] = useState('');
+  const [customerSearchQuery, setCustomerSearchQuery] = useState('');
+  const [orderSearchQuery, setOrderSearchQuery] = useState('');
+  const [adminSearchQuery, setAdminSearchQuery] = useState('');
+  const [dashboardSearchQuery, setDashboardSearchQuery] = useState('');
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [filteredCustomers, setFilteredCustomers] = useState<CustomerUser[]>([]);
+  const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
+  const [filteredAdmins, setFilteredAdmins] = useState<AdminUser[]>([]);
+
   const [newAdmin, setNewAdmin] = useState({
     name: '',
     email: '',
@@ -159,8 +170,11 @@ const AdminPage: React.FC = () => {
       setProductsLoading(true);
       const allProducts = await productService.getAllProducts();
       setProducts(allProducts);
+      setFilteredProducts(allProducts); // Initialize filtered products
     } catch (error) {
       console.error('Failed to fetch products:', error);
+      setProducts([]);
+      setFilteredProducts([]);
     } finally {
       setProductsLoading(false);
     }
@@ -171,6 +185,7 @@ const AdminPage: React.FC = () => {
       setOrdersLoading(true);
       const allOrders = await orderService.getAllOrders();
       setOrders(allOrders);
+      setFilteredOrders(allOrders); // Initialize filtered orders
     } catch (error) {
       console.error('Failed to fetch orders:', error);
     } finally {
@@ -181,25 +196,179 @@ const AdminPage: React.FC = () => {
   const fetchCustomers = async () => {
     try {
       setCustomersLoading(true);
+      
       const allCustomers = await userService.getAllUsers();
-      // Map UserProfile to CustomerUser interface
-      const mappedCustomers: CustomerUser[] = allCustomers.map(user => ({
-        id: `CUST-${user.id}`,
-        name: `${user.firstName} ${user.lastName}`,
-        email: user.email,
-        phone: user.phoneNumber || 'N/A',
-        createdAt: user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'Unknown',
-        lastLogin: 'Unknown', // This would need a separate API call
-        totalOrders: 0, // This would need a separate API call
-        totalSpent: 0, // This would need a separate API call
-        wishlistItems: 0, // This would need a separate API call
-        status: 'active' as const
-      }));
+      
+      // Map UserProfile to CustomerUser interface with better name handling
+      const mappedCustomers: CustomerUser[] = allCustomers.map(user => {
+        // Better name handling logic
+        let displayName = 'Unknown Name';
+        
+        // Helper function to check if a string is meaningful
+        const isValidName = (name: any) => {
+          return name && typeof name === 'string' && name.trim().length > 0;
+        };
+        
+        // Check for common field name variations
+        const possibleFirstName = user.firstName || (user as any).first_name || (user as any).firstname || (user as any).name || (user as any).fullName;
+        const possibleLastName = user.lastName || (user as any).last_name || (user as any).lastname || (user as any).surname || (user as any).familyName;
+        
+        const firstName = isValidName(possibleFirstName) ? possibleFirstName.trim() : '';
+        const lastName = isValidName(possibleLastName) ? possibleLastName.trim() : '';
+        
+        // If we found a full name, try to split it
+        if (!firstName && !lastName && (user as any).name && typeof (user as any).name === 'string') {
+          const nameParts = (user as any).name.trim().split(' ');
+          if (nameParts.length >= 2) {
+            const firstName = nameParts[0];
+            const lastName = nameParts.slice(1).join(' ');
+            displayName = `${firstName} ${lastName}`;
+          } else if (nameParts.length === 1) {
+            displayName = nameParts[0];
+          }
+        } else if (firstName && lastName) {
+          // Both names exist
+          displayName = `${firstName} ${lastName}`;
+        } else if (firstName && !lastName) {
+          // Only firstName exists
+          displayName = firstName;
+        } else if (!firstName && lastName) {
+          // Only lastName exists
+          displayName = lastName;
+        } else if (user.email) {
+          // Use email prefix if no names exist
+          const emailPrefix = user.email.split('@')[0];
+          if (emailPrefix && emailPrefix.length > 0) {
+            displayName = emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1);
+          } else {
+            displayName = 'User';
+          }
+        } else {
+          // Last resort fallback
+          displayName = `Customer ${user.id}`;
+        }
+        
+        return {
+          id: `CUST-${user.id}`,
+          name: displayName,
+          email: user.email,
+          phone: user.phoneNumber || 'N/A',
+          createdAt: user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'Unknown',
+          lastLogin: 'Unknown', // This would need a separate API call
+          totalOrders: 0, // This would need a separate API call
+          totalSpent: 0, // This would need a separate API call
+          wishlistItems: 0, // This would need a separate API call
+          status: 'active' as const
+        };
+      });
+      
       setCustomers(mappedCustomers);
+      setFilteredCustomers(mappedCustomers); // Initialize filtered customers
     } catch (error) {
       console.error('Failed to fetch customers:', error);
+      setCustomers([]);
+      setFilteredCustomers([]);
     } finally {
       setCustomersLoading(false);
+    }
+  };
+
+  // Search and filter functions
+  const filterProducts = (query: string) => {
+    if (!query.trim()) {
+      setFilteredProducts(products);
+      return;
+    }
+    
+    const filtered = products.filter(product => 
+      product.name.toLowerCase().includes(query.toLowerCase()) ||
+      product.category.toLowerCase().includes(query.toLowerCase()) ||
+      product.brand?.toLowerCase().includes(query.toLowerCase()) ||
+      product.sku?.toLowerCase().includes(query.toLowerCase()) ||
+      product.description?.toLowerCase().includes(query.toLowerCase())
+    );
+    setFilteredProducts(filtered);
+  };
+
+  const filterCustomers = (query: string) => {
+    if (!query.trim()) {
+      setFilteredCustomers(customers);
+      return;
+    }
+    
+    const filtered = customers.filter(customer => 
+      customer.name.toLowerCase().includes(query.toLowerCase()) ||
+      customer.email.toLowerCase().includes(query.toLowerCase()) ||
+      customer.id.toLowerCase().includes(query.toLowerCase()) ||
+      customer.phone.toLowerCase().includes(query.toLowerCase())
+    );
+    setFilteredCustomers(filtered);
+  };
+
+  const filterOrders = (query: string) => {
+    if (!query.trim()) {
+      setFilteredOrders(orders);
+      return;
+    }
+    
+    const filtered = orders.filter(order => 
+      order.id.toLowerCase().includes(query.toLowerCase()) ||
+      order.status.toLowerCase().includes(query.toLowerCase()) ||
+      order.orderNumber?.toLowerCase().includes(query.toLowerCase()) ||
+      order.shippingAddress?.toLowerCase().includes(query.toLowerCase())
+    );
+    setFilteredOrders(filtered);
+  };
+
+  // Handle search input changes
+  const handleProductSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const query = e.target.value;
+    setProductSearchQuery(query);
+    filterProducts(query);
+  };
+
+  const handleCustomerSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const query = e.target.value;
+    setCustomerSearchQuery(query);
+    filterCustomers(query);
+  };
+
+  const handleOrderSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const query = e.target.value;
+    setOrderSearchQuery(query);
+    filterOrders(query);
+  };
+
+  const handleDashboardSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const query = e.target.value;
+    setDashboardSearchQuery(query);
+    // Dashboard search can search across multiple data types
+    if (query.trim()) {
+      // Search in products
+      const productResults = products.filter(product => 
+        product.name.toLowerCase().includes(query.toLowerCase()) ||
+        product.category.toLowerCase().includes(query.toLowerCase())
+      );
+      setFilteredProducts(productResults);
+      
+      // Search in customers
+      const customerResults = customers.filter(customer => 
+        customer.name.toLowerCase().includes(query.toLowerCase()) ||
+        customer.email.toLowerCase().includes(query.toLowerCase())
+      );
+      setFilteredCustomers(customerResults);
+      
+      // Search in orders
+      const orderResults = orders.filter(order => 
+        order.id.toLowerCase().includes(query.toLowerCase()) ||
+        order.status.toLowerCase().includes(query.toLowerCase())
+      );
+      setFilteredOrders(orderResults);
+    } else {
+      // Reset all filters when search is cleared
+      setFilteredProducts(products);
+      setFilteredCustomers(customers);
+      setFilteredOrders(orders);
     }
   };
 
@@ -219,11 +388,32 @@ const AdminPage: React.FC = () => {
         permissions: [] // This would need a separate API call
       }));
       setAdmins(mappedAdmins);
+      setFilteredAdmins(mappedAdmins); // Initialize filtered admins
     } catch (error) {
       console.error('Failed to fetch admins:', error);
     } finally {
       setAdminsLoading(false);
     }
+  };
+
+  const filterAdmins = (query: string) => {
+    if (!query.trim()) {
+      setFilteredAdmins(admins);
+      return;
+    }
+
+    const filtered = admins.filter(admin => 
+      admin.name.toLowerCase().includes(query.toLowerCase()) ||
+      admin.email.toLowerCase().includes(query.toLowerCase()) ||
+      admin.id.toLowerCase().includes(query.toLowerCase())
+    );
+    setFilteredAdmins(filtered);
+  };
+
+  const handleAdminSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const query = e.target.value;
+    setAdminSearchQuery(query);
+    filterAdmins(query);
   };
 
   const calculateStats = () => {
@@ -282,6 +472,23 @@ const AdminPage: React.FC = () => {
         break;
     }
   }, [activeTab, isAuthenticated]);
+
+  // Update filtered data when main data changes
+  useEffect(() => {
+    setFilteredProducts(products);
+  }, [products]);
+
+  useEffect(() => {
+    setFilteredCustomers(customers);
+  }, [customers]);
+
+  useEffect(() => {
+    setFilteredOrders(orders);
+  }, [orders]);
+
+  useEffect(() => {
+    setFilteredAdmins(admins);
+  }, [admins]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -555,19 +762,66 @@ const AdminPage: React.FC = () => {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-        {/* Dashboard Content */}
+        {/* Dashboard */}
         {activeTab === 'dashboard' && (
-          <div className="space-y-8">
-            {/* Stats Cards */}
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-gray-800">📊 Dashboard Overview</h2>
+              <div className="flex space-x-2">
+                <Button variant="secondary">Export Report</Button>
+                <Button variant="primary" className="bg-gradient-to-r from-green-500 to-green-600">
+                  📈 Analytics
+                </Button>
+              </div>
+            </div>
+
+            {/* Dashboard Search Bar */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+              <div className="flex items-center space-x-4">
+                <div className="flex-1">
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="Search through dashboard data, recent orders, or activities..."
+                      value={dashboardSearchQuery}
+                      onChange={handleDashboardSearchChange}
+                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    />
+                    <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="text-sm text-gray-600">
+                  Quick search across all dashboard data
+                </div>
+                {dashboardSearchQuery && (
+                  <Button
+                    variant="secondary"
+                    size="small"
+                    onClick={() => {
+                      setDashboardSearchQuery('');
+                      setFilteredProducts(products);
+                      setFilteredCustomers(customers);
+                      setFilteredOrders(orders);
+                    }}
+                  >
+                    Clear
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <Card variant="elevated" className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-blue-100 text-sm font-medium">Total Products</p>
                     <p className="text-3xl font-bold">
-                      {loading ? '...' : stats.totalProducts}
+                      {loading ? '...' : dashboardSearchQuery ? filteredProducts.length : stats.totalProducts}
                     </p>
-                    <p className="text-blue-200 text-xs">+12% from last month</p>
+                    <p className="text-blue-200 text-xs">+12 from last month</p>
                   </div>
                   <div className="text-4xl">🌳</div>
                 </div>
@@ -576,13 +830,13 @@ const AdminPage: React.FC = () => {
               <Card variant="elevated" className="bg-gradient-to-br from-green-500 to-green-600 text-white">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-green-100 text-sm font-medium">Total Revenue</p>
+                    <p className="text-green-100 text-sm font-medium">Total Orders</p>
                     <p className="text-3xl font-bold">
-                      {loading ? '...' : `৳${stats.totalRevenue.toLocaleString()}`}
+                      {loading ? '...' : dashboardSearchQuery ? filteredOrders.length : stats.totalOrders}
                     </p>
-                    <p className="text-green-200 text-xs">+8% from last month</p>
+                    <p className="text-green-200 text-xs">+8 from last month</p>
                   </div>
-                  <div className="text-4xl">💰</div>
+                  <div className="text-4xl">📦</div>
                 </div>
               </Card>
 
@@ -591,9 +845,9 @@ const AdminPage: React.FC = () => {
                   <div>
                     <p className="text-purple-100 text-sm font-medium">Total Customers</p>
                     <p className="text-3xl font-bold">
-                      {loading ? '...' : stats.totalCustomers}
+                      {loading ? '...' : dashboardSearchQuery ? filteredCustomers.length : stats.totalCustomers}
                     </p>
-                    <p className="text-purple-200 text-xs">+15% from last month</p>
+                    <p className="text-purple-200 text-xs">+5 from last month</p>
                   </div>
                   <div className="text-4xl">👥</div>
                 </div>
@@ -613,6 +867,41 @@ const AdminPage: React.FC = () => {
               </Card>
             </div>
 
+            {/* Revenue Card */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card variant="elevated" className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-emerald-100 text-sm font-medium">Total Revenue</p>
+                    <p className="text-3xl font-bold">
+                      {loading ? '...' : dashboardSearchQuery ? 
+                        `৳${filteredOrders.reduce((sum, order) => sum + order.totalAmount, 0).toLocaleString()}` : 
+                        `৳${stats.totalRevenue.toLocaleString()}`
+                      }
+                    </p>
+                    <p className="text-emerald-200 text-xs">+15% from last month</p>
+                  </div>
+                  <div className="text-4xl">💰</div>
+                </div>
+              </Card>
+
+              <Card variant="elevated" className="bg-gradient-to-br from-rose-500 to-rose-600 text-white">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-rose-100 text-sm font-medium">Low Stock Items</p>
+                    <p className="text-3xl font-bold">
+                      {loading ? '...' : dashboardSearchQuery ? 
+                        filteredProducts.filter(p => p.stock < 10).length : 
+                        stats.lowStockItems
+                      }
+                    </p>
+                    <p className="text-rose-200 text-xs">Requires attention</p>
+                  </div>
+                  <div className="text-4xl">⚠️</div>
+                </div>
+              </Card>
+            </div>
+
             {/* Alerts */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card variant="elevated" className="bg-white">
@@ -624,14 +913,18 @@ const AdminPage: React.FC = () => {
                   <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg border border-red-200">
                     <div className="flex items-center space-x-3">
                       <span className="text-red-500">🔴</span>
-                      <span className="text-sm font-medium text-red-800">{stats.pendingOrders} orders pending</span>
+                      <span className="text-sm font-medium text-red-800">
+                        {dashboardSearchQuery ? filteredOrders.filter(o => o.status === 'pending').length : stats.pendingOrders} orders pending
+                      </span>
                     </div>
                     <Button variant="secondary" size="small">Review</Button>
                   </div>
                   <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg border border-yellow-200">
                     <div className="flex items-center space-x-3">
                       <span className="text-yellow-500">🟡</span>
-                      <span className="text-sm font-medium text-yellow-800">{stats.lowStockItems} items low in stock</span>
+                      <span className="text-sm font-medium text-yellow-800">
+                        {dashboardSearchQuery ? filteredProducts.filter(p => p.stock < 10).length : stats.lowStockItems} items low in stock
+                      </span>
                     </div>
                     <Button variant="secondary" size="small">Restock</Button>
                   </div>
@@ -651,10 +944,10 @@ const AdminPage: React.FC = () => {
                     ➕ Add Admin
                   </Button>
                   <Button variant="secondary" fullWidth>
-                    📦 View Orders
+                    📦 View Orders ({dashboardSearchQuery ? filteredOrders.length : stats.totalOrders})
                   </Button>
                   <Button variant="secondary" fullWidth>
-                    👥 Manage Users
+                    👥 Manage Users ({dashboardSearchQuery ? filteredCustomers.length : stats.totalCustomers})
                   </Button>
                   <Button variant="secondary" fullWidth>
                     📊 View Reports
@@ -682,24 +975,55 @@ const AdminPage: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {orders.slice(0, 5).map((order) => (
-                      <tr key={order.id} className="border-b border-gray-100 hover:bg-gray-50">
-                        <td className="py-4 px-6 font-medium text-gray-800">{order.id}</td>
-                        <td className="py-4 px-6 text-gray-600">
-                          {order.items.length > 0 ? order.items[0].productName : 'N/A'}
-                        </td>
-                        <td className="py-4 px-6 font-semibold text-gray-800">৳{formatPrice(order.totalAmount)}</td>
-                        <td className="py-4 px-6">
-                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}>
-                            {getStatusIcon(order.status)} {order.status}
-                          </span>
-                        </td>
-                        <td className="py-4 px-6 text-gray-600">{formatDate(order.createdAt)}</td>
-                        <td className="py-4 px-6">
-                          <Button variant="secondary" size="small">View</Button>
-                        </td>
-                      </tr>
-                    ))}
+                    {dashboardSearchQuery ? (
+                      // Show filtered orders when searching
+                      filteredOrders.slice(0, 5).length === 0 ? (
+                        <tr>
+                          <td colSpan={6} className="text-center py-8 text-gray-500">
+                            No orders found matching your search
+                          </td>
+                        </tr>
+                      ) : (
+                        filteredOrders.slice(0, 5).map((order) => (
+                          <tr key={order.id} className="border-b border-gray-100 hover:bg-gray-50">
+                            <td className="py-4 px-6 font-medium text-gray-800">{order.id}</td>
+                            <td className="py-4 px-6 text-gray-600">
+                              {order.items.length > 0 ? order.items[0].productName : 'N/A'}
+                            </td>
+                            <td className="py-4 px-6 font-semibold text-gray-800">৳{formatPrice(order.totalAmount)}</td>
+                            <td className="py-4 px-6">
+                              <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}>
+                                {getStatusIcon(order.status)} {order.status}
+                              </span>
+                            </td>
+                            <td className="py-4 px-6 text-gray-600">{formatDate(order.createdAt)}</td>
+                            <td className="py-4 px-6">
+                              <Button variant="secondary" size="small">View</Button>
+                            </td>
+                          </tr>
+                        ))
+                      )
+                    ) : (
+                      // Show regular recent orders when not searching
+                      orders.slice(0, 5).map((order) => (
+                        <tr key={order.id} className="border-b border-gray-100 hover:bg-gray-50">
+                          <td className="py-4 px-6 font-medium text-gray-800">{order.id}</td>
+                          <td className="py-4 px-6 text-gray-600">
+                            {order.items.length > 0 ? order.items[0].productName : 'N/A'}
+                          </td>
+                          <td className="py-4 px-6 font-semibold text-gray-800">৳{formatPrice(order.totalAmount)}</td>
+                          <td className="py-4 px-6">
+                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}>
+                              {getStatusIcon(order.status)} {order.status}
+                            </span>
+                          </td>
+                          <td className="py-4 px-6 text-gray-600">{formatDate(order.createdAt)}</td>
+                          <td className="py-4 px-6">
+                            <Button variant="secondary" size="small">View</Button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -721,6 +1045,41 @@ const AdminPage: React.FC = () => {
               </Button>
             </div>
 
+            {/* Admin Search Bar */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+              <div className="flex items-center space-x-4">
+                <div className="flex-1">
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="Search admins by name, email, ID..."
+                      value={adminSearchQuery}
+                      onChange={handleAdminSearchChange}
+                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    />
+                    <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="text-sm text-gray-600">
+                  {filteredAdmins.length} of {admins.length} admins
+                </div>
+                {adminSearchQuery && (
+                  <Button
+                    variant="secondary"
+                    size="small"
+                    onClick={() => {
+                      setAdminSearchQuery('');
+                      setFilteredAdmins(admins);
+                    }}
+                  >
+                    Clear
+                  </Button>
+                )}
+              </div>
+            </div>
+
             <div className="bg-white rounded-xl shadow-lg overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full">
@@ -737,33 +1096,41 @@ const AdminPage: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {admins.map((admin) => (
-                      <tr key={admin.id} className="border-b border-gray-100 hover:bg-gray-50">
-                        <td className="py-4 px-6 font-medium text-gray-800">{admin.id}</td>
-                        <td className="py-4 px-6 text-gray-800 font-medium">{admin.name}</td>
-                        <td className="py-4 px-6 text-gray-600">{admin.email}</td>
-                        <td className="py-4 px-6">
-                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getRoleColor(admin.role)}`}>
-                            {getRoleIcon(admin.role)} {admin.role.replace('_', ' ')}
-                          </span>
-                        </td>
-                        <td className="py-4 px-6">
-                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                            admin.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                          }`}>
-                            {admin.status === 'active' ? '✅ Active' : '❌ Inactive'}
-                          </span>
-                        </td>
-                        <td className="py-4 px-6 text-gray-600">{admin.createdAt}</td>
-                        <td className="py-4 px-6 text-gray-600">{admin.lastLogin}</td>
-                        <td className="py-4 px-6">
-                          <div className="flex space-x-2">
-                            <Button variant="secondary" size="small">Edit</Button>
-                            <Button variant="secondary" size="small">View</Button>
-                          </div>
+                    {filteredAdmins.length === 0 ? (
+                      <tr>
+                        <td colSpan={9} className="text-center py-8 text-gray-500">
+                          {adminSearchQuery ? 'No admins found matching your search' : 'No admins found'}
                         </td>
                       </tr>
-                    ))}
+                    ) : (
+                      filteredAdmins.map((admin) => (
+                        <tr key={admin.id} className="border-b border-gray-100 hover:bg-gray-50">
+                          <td className="py-4 px-6 font-medium text-gray-800">{admin.id}</td>
+                          <td className="py-4 px-6 text-gray-800 font-medium">{admin.name}</td>
+                          <td className="py-4 px-6 text-gray-600">{admin.email}</td>
+                          <td className="py-4 px-6">
+                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getRoleColor(admin.role)}`}>
+                              {getRoleIcon(admin.role)} {admin.role.replace('_', ' ')}
+                            </span>
+                          </td>
+                          <td className="py-4 px-6">
+                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                              admin.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                            }`}>
+                              {admin.status === 'active' ? '✅ Active' : '❌ Inactive'}
+                            </span>
+                          </td>
+                          <td className="py-4 px-6 text-gray-600">{admin.createdAt}</td>
+                          <td className="py-4 px-6 text-gray-600">{admin.lastLogin}</td>
+                          <td className="py-4 px-6">
+                            <div className="flex space-x-2">
+                              <Button variant="secondary" size="small">Edit</Button>
+                              <Button variant="secondary" size="small">View</Button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -777,10 +1144,52 @@ const AdminPage: React.FC = () => {
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-bold text-gray-800">👥 Customer Management</h2>
               <div className="flex space-x-2">
+                <Button 
+                  variant="secondary" 
+                  onClick={fetchCustomers}
+                  disabled={customersLoading}
+                >
+                  {customersLoading ? '🔄 Loading...' : '🔄 Refresh'}
+                </Button>
                 <Button variant="secondary">Export Data</Button>
                 <Button variant="primary" className="bg-gradient-to-r from-green-500 to-green-600">
                   📊 Analytics
                 </Button>
+              </div>
+            </div>
+
+            {/* Customer Search Bar */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+              <div className="flex items-center space-x-4">
+                <div className="flex-1">
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="Search customers by name, email, ID, or phone..."
+                      value={customerSearchQuery}
+                      onChange={handleCustomerSearchChange}
+                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    />
+                    <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="text-sm text-gray-600">
+                  {filteredCustomers.length} of {customers.length} customers
+                </div>
+                {customerSearchQuery && (
+                  <Button
+                    variant="secondary"
+                    size="small"
+                    onClick={() => {
+                      setCustomerSearchQuery('');
+                      setFilteredCustomers(customers);
+                    }}
+                  >
+                    Clear
+                  </Button>
+                )}
               </div>
             </div>
 
@@ -802,37 +1211,45 @@ const AdminPage: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {customers.map((customer) => (
-                      <tr key={customer.id} className="border-b border-gray-100 hover:bg-gray-50">
-                        <td className="py-4 px-6 font-medium text-gray-800">{customer.id}</td>
-                        <td className="py-4 px-6 text-gray-800 font-medium">{customer.name}</td>
-                        <td className="py-4 px-6 text-gray-600">{customer.email}</td>
-                        <td className="py-4 px-6 text-gray-600">{customer.phone}</td>
-                        <td className="py-4 px-6">
-                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                            customer.status === 'active' ? 'bg-green-100 text-green-800' : 
-                            customer.status === 'inactive' ? 'bg-gray-100 text-gray-800' : 'bg-red-100 text-red-800'
-                          }`}>
-                            {customer.status === 'active' ? '✅ Active' : 
-                             customer.status === 'inactive' ? '⏸️ Inactive' : '🚫 Suspended'}
-                          </span>
-                        </td>
-                        <td className="py-4 px-6 text-gray-800 font-medium">{customer.totalOrders}</td>
-                        <td className="py-4 px-6 text-gray-800 font-medium">৳{customer.totalSpent.toFixed(2)}</td>
-                        <td className="py-4 px-6">
-                          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800">
-                            💜 {customer.wishlistItems} items
-                          </span>
-                        </td>
-                        <td className="py-4 px-6 text-gray-600">{customer.createdAt}</td>
-                        <td className="py-4 px-6">
-                          <div className="flex space-x-2">
-                            <Button variant="secondary" size="small">View</Button>
-                            <Button variant="secondary" size="small">Edit</Button>
-                          </div>
+                    {filteredCustomers.length === 0 ? (
+                      <tr>
+                        <td colSpan={10} className="text-center py-8 text-gray-500">
+                          {customerSearchQuery ? 'No customers found matching your search' : 'No customers found'}
                         </td>
                       </tr>
-                    ))}
+                    ) : (
+                      filteredCustomers.map((customer) => (
+                        <tr key={customer.id} className="border-b border-gray-100 hover:bg-gray-50">
+                          <td className="py-4 px-6 font-medium text-gray-800">{customer.id}</td>
+                          <td className="py-4 px-6 text-gray-800 font-medium">{customer.name}</td>
+                          <td className="py-4 px-6 text-gray-600">{customer.email}</td>
+                          <td className="py-4 px-6 text-gray-600">{customer.phone}</td>
+                          <td className="py-4 px-6">
+                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                              customer.status === 'active' ? 'bg-green-100 text-green-800' : 
+                              customer.status === 'inactive' ? 'bg-gray-100 text-gray-800' : 'bg-red-100 text-red-800'
+                            }`}>
+                              {customer.status === 'active' ? '✅ Active' : 
+                               customer.status === 'inactive' ? '⏸️ Inactive' : '🚫 Suspended'}
+                            </span>
+                          </td>
+                          <td className="py-4 px-6 text-gray-800 font-medium">{customer.totalOrders}</td>
+                          <td className="py-4 px-6 text-gray-800 font-medium">৳{customer.totalSpent.toFixed(2)}</td>
+                          <td className="py-4 px-6">
+                            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800">
+                              💜 {customer.wishlistItems} items
+                            </span>
+                          </td>
+                          <td className="py-4 px-6 text-gray-600">{customer.createdAt}</td>
+                          <td className="py-4 px-6">
+                            <div className="flex space-x-2">
+                              <Button variant="secondary" size="small">View</Button>
+                              <Button variant="secondary" size="small">Edit</Button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -852,6 +1269,41 @@ const AdminPage: React.FC = () => {
               >
                 ➕ Add New Product
               </Button>
+            </div>
+
+            {/* Product Search Bar */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+              <div className="flex items-center space-x-4">
+                <div className="flex-1">
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="Search products by name, category, brand, SKU, or description..."
+                      value={productSearchQuery}
+                      onChange={handleProductSearchChange}
+                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    />
+                    <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="text-sm text-gray-600">
+                  {filteredProducts.length} of {products.length} products
+                </div>
+                {productSearchQuery && (
+                  <Button
+                    variant="secondary"
+                    size="small"
+                    onClick={() => {
+                      setProductSearchQuery('');
+                      setFilteredProducts(products);
+                    }}
+                  >
+                    Clear
+                  </Button>
+                )}
+              </div>
             </div>
 
             <div className="bg-white rounded-xl shadow-lg overflow-hidden">
@@ -876,14 +1328,14 @@ const AdminPage: React.FC = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {products.length === 0 ? (
+                      {filteredProducts.length === 0 ? (
                         <tr>
                           <td colSpan={8} className="text-center py-8 text-gray-500">
-                            No products found
+                            {productSearchQuery ? 'No products found matching your search' : 'No products found'}
                           </td>
                         </tr>
                       ) : (
-                        products.map((product) => (
+                        filteredProducts.map((product) => (
                           <tr key={product.id} className="border-b border-gray-100 hover:bg-gray-50">
                             <td className="py-4 px-6 font-medium text-gray-800">{product.id}</td>
                             <td className="py-4 px-6 text-gray-800 font-medium">{product.name}</td>
@@ -950,6 +1402,41 @@ const AdminPage: React.FC = () => {
               </Button>
             </div>
 
+            {/* Order Search Bar */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+              <div className="flex items-center space-x-4">
+                <div className="flex-1">
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="Search orders by ID, customer name, or status..."
+                      value={orderSearchQuery}
+                      onChange={handleOrderSearchChange}
+                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    />
+                    <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="text-sm text-gray-600">
+                  {filteredOrders.length} of {orders.length} orders
+                </div>
+                {orderSearchQuery && (
+                  <Button
+                    variant="secondary"
+                    size="small"
+                    onClick={() => {
+                      setOrderSearchQuery('');
+                      setFilteredOrders(orders);
+                    }}
+                  >
+                    Clear
+                  </Button>
+                )}
+              </div>
+            </div>
+
             <div className="bg-white rounded-xl shadow-lg overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full">
@@ -965,36 +1452,36 @@ const AdminPage: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {orders.map((order) => (
-                      <tr key={order.id} className="border-b border-gray-100 hover:bg-gray-50">
-                        <td className="py-4 px-6 font-medium text-gray-800">{order.id}</td>
-                        <td className="py-4 px-6 text-gray-600">
-                          {order.items.length > 0 ? order.items[0].productName : 'N/A'}
-                        </td>
-                        <td className="py-4 px-6 font-semibold text-gray-800">৳{formatPrice(order.totalAmount)}</td>
-                        <td className="py-4 px-6">
-                          <select
-                            value={order.status}
-                            onChange={(e) => handleOrderStatusChange(order.id, e.target.value as Order['status'])}
-                            className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          >
-                            <option value="pending">Pending</option>
-                            <option value="processing">Processing</option>
-                            <option value="shipped">Shipped</option>
-                            <option value="delivered">Delivered</option>
-                            <option value="cancelled">Cancelled</option>
-                          </select>
-                        </td>
-                        <td className="py-4 px-6 text-gray-600">{formatDate(order.createdAt)}</td>
-                        <td className="py-4 px-6 text-gray-600">{formatDate(order.createdAt)}</td>
-                        <td className="py-4 px-6">
-                          <div className="flex space-x-2">
-                            <Button variant="secondary" size="small">View</Button>
-                            <Button variant="secondary" size="small">Edit</Button>
-                          </div>
+                    {filteredOrders.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} className="text-center py-8 text-gray-500">
+                          {orderSearchQuery ? 'No orders found matching your search' : 'No orders found'}
                         </td>
                       </tr>
-                    ))}
+                    ) : (
+                      filteredOrders.map((order) => (
+                        <tr key={order.id} className="border-b border-gray-100 hover:bg-gray-50">
+                          <td className="py-4 px-6 font-medium text-gray-800">{order.id}</td>
+                          <td className="py-4 px-6 text-gray-600">
+                            {order.items.length > 0 ? order.items[0].productName : 'N/A'}
+                          </td>
+                          <td className="py-4 px-6 font-semibold text-gray-800">৳{formatPrice(order.totalAmount)}</td>
+                          <td className="py-4 px-6">
+                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}>
+                              {getStatusIcon(order.status)} {order.status}
+                            </span>
+                          </td>
+                          <td className="py-4 px-6 text-gray-600">{formatDate(order.createdAt)}</td>
+                          <td className="py-4 px-6 text-gray-600">{formatDate(order.createdAt)}</td>
+                          <td className="py-4 px-6">
+                            <div className="flex space-x-2">
+                              <Button variant="secondary" size="small">View</Button>
+                              <Button variant="secondary" size="small">Edit</Button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
